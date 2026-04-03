@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Publication, PublicationStatus, AdminAssignment } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ADMIN_EMAILS } from '../constants';
 
@@ -26,8 +26,11 @@ export default function AdminDashboard({
   const [userFilter, setUserFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [viewingPubId, setViewingPubId] = useState<string | null>(null);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewAction, setReviewAction] = useState<'approved' | 'rejected' | null>(null);
+
+  const viewingPub = publications.find(p => p.id === viewingPubId);
 
   const handleReviewSubmit = () => {
     if (reviewingId && reviewAction) {
@@ -157,8 +160,13 @@ export default function AdminDashboard({
               {filteredPublications.map((pub) => (
                 <tr key={pub.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-8 py-6 max-w-md">
-                    <p className="text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-brand-600 transition-colors">{pub.title}</p>
-                    <p className="text-xs text-slate-400 mt-1">{pub.authors} ({pub.year})</p>
+                    <button 
+                      onClick={() => setViewingPubId(pub.id)}
+                      className="text-left group/title"
+                    >
+                      <p className="text-sm font-bold text-slate-900 line-clamp-1 group-hover/title:text-brand-600 transition-colors">{pub.title}</p>
+                      <p className="text-xs text-slate-400 mt-1">{pub.authors} ({pub.year})</p>
+                    </button>
                   </td>
                   <td className="px-8 py-6">
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
@@ -205,6 +213,13 @@ export default function AdminDashboard({
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => setViewingPubId(pub.id)}
+                        className="p-2 bg-slate-50 text-slate-400 hover:bg-brand-600 hover:text-white rounded-xl transition-all"
+                        title="Ver Detalhes"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       {pub.status !== 'approved' && (
                         <button 
                           onClick={() => {
@@ -302,6 +317,140 @@ export default function AdminDashboard({
                   >
                     Confirmar {reviewAction === 'approved' ? 'Aprovação' : 'Rejeição'}
                   </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Details Modal */}
+      <AnimatePresence>
+        {viewingPub && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-[2.5rem] academic-shadow border border-slate-100 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-8 bg-brand-900 text-white flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/10 backdrop-blur-sm">
+                      {viewingPub.nature}
+                    </span>
+                    <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full border ${
+                      viewingPub.status === 'approved' ? 'bg-emerald-500/20 text-emerald-200 border-emerald-500/20' :
+                      viewingPub.status === 'rejected' ? 'bg-rose-500/20 text-rose-200 border-rose-500/20' :
+                      'bg-amber-500/20 text-amber-200 border-amber-500/20'
+                    }`}>
+                      {viewingPub.status === 'approved' ? 'Aprovado' : 
+                       viewingPub.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold leading-tight">
+                    {viewingPub.title}
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setViewingPubId(null)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="p-8 overflow-y-auto space-y-8 custom-scrollbar">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Autores</p>
+                    <p className="text-sm text-slate-700 font-medium">{viewingPub.authors}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ano / Base de Dados</p>
+                    <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resumo / Abstract</p>
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-sm text-slate-600 leading-relaxed italic">"{viewingPub.abstract}"</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Critério de Inclusão</p>
+                    <div className={`p-3 rounded-xl border flex items-center gap-2 ${
+                      viewingPub.inclusion_criterion === 'Não incluso' 
+                        ? 'bg-rose-50 text-rose-700 border-rose-100' 
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                    }`}>
+                      {viewingPub.inclusion_criterion === 'Não incluso' ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                      <span className="text-xs font-bold uppercase tracking-widest">{viewingPub.inclusion_criterion}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Justificativa do Motivo</p>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <p className="text-xs text-slate-600 font-medium">{viewingPub.reason || 'Nenhuma justificativa informada.'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {viewingPub.review_comment && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Feedback da Revisão</p>
+                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+                      <MessageSquare className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-800 leading-relaxed italic">{viewingPub.review_comment}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs">
+                      {viewingPub.user_name?.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">{viewingPub.user_name}</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">{viewingPub.user_role || 'ligante'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    {viewingPub.status !== 'approved' && (
+                      <button 
+                        onClick={() => {
+                          setViewingPubId(null);
+                          setReviewingId(viewingPub.id);
+                          setReviewAction('approved');
+                          setReviewComment(viewingPub.review_comment || '');
+                        }}
+                        className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                      >
+                        <Check className="w-4 h-4" />
+                        Aprovar
+                      </button>
+                    )}
+                    {viewingPub.status !== 'rejected' && (
+                      <button 
+                        onClick={() => {
+                          setViewingPubId(null);
+                          setReviewingId(viewingPub.id);
+                          setReviewAction('rejected');
+                          setReviewComment(viewingPub.review_comment || '');
+                        }}
+                        className="px-6 py-2.5 bg-rose-600 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-rose-700 transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Rejeitar
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>

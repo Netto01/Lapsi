@@ -1,7 +1,8 @@
 import { Publication } from '../types';
-import { Search, Trash2, Calendar, BookOpen, Database, User, Tag, ChevronRight, Filter, MessageSquare } from 'lucide-react';
+import { Search, Trash2, Calendar, BookOpen, Database, User, Tag, ChevronRight, Filter, MessageSquare, X, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
+import { useState } from 'react';
 
 interface PublicationListProps {
   publications: Publication[];
@@ -11,7 +12,10 @@ interface PublicationListProps {
 }
 
 export default function PublicationList({ publications, onDelete, searchTerm, setSearchTerm }: PublicationListProps) {
+  const [viewingPubId, setViewingPubId] = useState<string | null>(null);
   
+  const viewingPub = publications.find(p => p.id === viewingPubId);
+
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta publicação?')) return;
     
@@ -157,7 +161,10 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                       </div>
                     </div>
                   )}
-                  <div className="flex items-center gap-1 text-brand-600 text-xs font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform cursor-pointer">
+                  <div 
+                    onClick={() => setViewingPubId(pub.id)}
+                    className="flex items-center gap-1 text-brand-600 text-xs font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform cursor-pointer"
+                  >
                     <span>Detalhes</span>
                     <ChevronRight className="w-4 h-4" />
                   </div>
@@ -183,6 +190,116 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
           </motion.div>
         )}
       </div>
+
+      {/* Details Modal */}
+      <AnimatePresence>
+        {viewingPub && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-[2.5rem] academic-shadow border border-slate-100 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-8 bg-brand-900 text-white flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/10 backdrop-blur-sm">
+                      {viewingPub.nature}
+                    </span>
+                    <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full border ${
+                      viewingPub.status === 'approved' ? 'bg-emerald-500/20 text-emerald-200 border-emerald-500/20' :
+                      viewingPub.status === 'rejected' ? 'bg-rose-500/20 text-rose-200 border-rose-500/20' :
+                      'bg-amber-500/20 text-amber-200 border-amber-500/20'
+                    }`}>
+                      {viewingPub.status === 'approved' ? 'Aprovado' : 
+                       viewingPub.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold leading-tight">
+                    {viewingPub.title}
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setViewingPubId(null)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="p-8 overflow-y-auto space-y-8 custom-scrollbar">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Autores</p>
+                    <p className="text-sm text-slate-700 font-medium">{viewingPub.authors}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ano / Base de Dados</p>
+                    <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resumo / Abstract</p>
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-sm text-slate-600 leading-relaxed italic">"{viewingPub.abstract}"</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Critério de Inclusão</p>
+                    <div className={`p-3 rounded-xl border flex items-center gap-2 ${
+                      viewingPub.inclusion_criterion === 'Não incluso' 
+                        ? 'bg-rose-50 text-rose-700 border-rose-100' 
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                    }`}>
+                      {viewingPub.inclusion_criterion === 'Não incluso' ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                      <span className="text-xs font-bold uppercase tracking-widest">{viewingPub.inclusion_criterion}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Justificativa do Motivo</p>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <p className="text-xs text-slate-600 font-medium">{viewingPub.reason || 'Nenhuma justificativa informada.'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {viewingPub.review_comment && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Feedback da Revisão</p>
+                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+                      <MessageSquare className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-800 leading-relaxed italic">{viewingPub.review_comment}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs">
+                      {viewingPub.user_name?.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">{viewingPub.user_name}</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">{viewingPub.user_role || 'ligante'}</p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setViewingPubId(null)}
+                    className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
