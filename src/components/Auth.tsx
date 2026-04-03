@@ -9,6 +9,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [role, setRole] = useState<'ligante' | 'professor'>('ligante');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -24,6 +25,7 @@ export default function Auth() {
           options: {
             data: {
               full_name: fullName,
+              role: role,
             },
           },
         });
@@ -90,6 +92,34 @@ export default function Auth() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                     />
+                  </div>
+
+                  <div className="space-y-2 pt-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Eu sou:</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setRole('ligante')}
+                        className={`py-3 px-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                          role === 'ligante' 
+                            ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-sm' 
+                            : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
+                        }`}
+                      >
+                        Ligante
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRole('professor')}
+                        className={`py-3 px-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                          role === 'professor' 
+                            ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-sm' 
+                            : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
+                        }`}
+                      >
+                        Professor
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               )}

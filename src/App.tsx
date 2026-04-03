@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, isConfigured } from './lib/supabase';
-import { Publication, AdminAssignment } from './types';
+import { Publication, AdminAssignment, Profile } from './types';
 import { ADMIN_EMAILS, SUPER_ADMIN_EMAILS } from './constants';
 import PublicationForm from './components/PublicationForm';
 import PublicationList from './components/PublicationList';
