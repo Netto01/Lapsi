@@ -7,6 +7,7 @@ import PublicationList from './components/PublicationList';
 import Stats from './components/Stats';
 import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
+import Criteria from './components/Criteria';
 import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Session } from '@supabase/supabase-js';
@@ -238,6 +239,9 @@ export default function App() {
             <AdminDashboard publications={publications} />
           ) : (
             <>
+              {/* Criteria Section */}
+              <Criteria />
+
               {/* Stats Section */}
               <Stats publications={publications} />
 
@@ -294,94 +298,103 @@ export default function App() {
         </main>
 
         {/* Footer / SQL Helper */}
-        <footer className="max-w-7xl mx-auto px-6 pb-20">
-          <div className="bg-brand-950 rounded-[2.5rem] p-12 text-slate-300 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 blur-[100px] rounded-full -mr-32 -mt-32 group-hover:bg-brand-500/20 transition-all duration-700" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="bg-brand-800 p-3 rounded-2xl">
-                  <Database className="w-6 h-6 text-brand-300" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-serif font-bold text-white">Infraestrutura de Dados</h3>
-                  <p className="text-brand-400 text-xs font-bold uppercase tracking-widest mt-1">Configuração do Banco de Dados</p>
-                </div>
-              </div>
+        {isAdmin && (
+          <footer className="max-w-7xl mx-auto px-6 pb-20">
+            <div className="bg-brand-950 rounded-[2.5rem] p-12 text-slate-300 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 blur-[100px] rounded-full -mr-32 -mt-32 group-hover:bg-brand-500/20 transition-all duration-700" />
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                <div className="space-y-6">
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    Este sistema utiliza o Supabase como motor de banco de dados. Para garantir a integridade dos registros, certifique-se de que o esquema SQL abaixo foi executado no seu editor.
-                  </p>
-                  <div className="flex flex-wrap gap-4">
-                    <div className="bg-brand-900/50 px-4 py-2 rounded-xl border border-brand-800 text-xs font-medium text-brand-200">
-                      PostgreSQL 15+
-                    </div>
-                    <div className="bg-brand-900/50 px-4 py-2 rounded-xl border border-brand-800 text-xs font-medium text-brand-200">
-                      RLS Enabled
-                    </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="bg-brand-800 p-3 rounded-2xl">
+                    <Database className="w-6 h-6 text-brand-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-serif font-bold text-white">Infraestrutura de Dados</h3>
+                    <p className="text-brand-400 text-xs font-bold uppercase tracking-widest mt-1">Configuração do Banco de Dados</p>
                   </div>
                 </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                  <div className="space-y-6">
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      Este sistema utiliza o Supabase como motor de banco de dados. Para garantir a integridade dos registros, certifique-se de que o esquema SQL abaixo foi executado no seu editor.
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                      <div className="bg-brand-900/50 px-4 py-2 rounded-xl border border-brand-800 text-xs font-medium text-brand-200">
+                        PostgreSQL 15+
+                      </div>
+                      <div className="bg-brand-900/50 px-4 py-2 rounded-xl border border-brand-800 text-xs font-medium text-brand-200">
+                        RLS Enabled
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="relative">
-                  <pre className="bg-black/40 backdrop-blur-sm p-6 rounded-3xl overflow-x-auto text-[11px] font-mono text-brand-300 border border-white/5 academic-shadow">
-{`CREATE TABLE publications (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  authors TEXT NOT NULL,
-  title TEXT NOT NULL,
-  abstract TEXT NOT NULL,
-  year INTEGER NOT NULL,
-  database TEXT NOT NULL,
-  nature TEXT NOT NULL,
-  inclusion_criterion TEXT NOT NULL,
-  reason TEXT,
-  user_name TEXT,
-  user_email TEXT
-);
+                  <div className="relative">
+                    <pre className="bg-black/40 backdrop-blur-sm p-6 rounded-3xl overflow-x-auto text-[11px] font-mono text-brand-300 border border-white/5 academic-shadow">
+  {`CREATE TABLE publications (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    authors TEXT NOT NULL,
+    title TEXT NOT NULL,
+    abstract TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    database TEXT NOT NULL,
+    nature TEXT NOT NULL,
+    inclusion_criterion TEXT NOT NULL,
+    reason TEXT,
+    user_name TEXT,
+    user_email TEXT
+  );
 
--- Habilitar RLS
-ALTER TABLE publications ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public Access" ON publications FOR ALL USING (true);`}
-                  </pre>
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(`CREATE TABLE publications (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  authors TEXT NOT NULL,
-  title TEXT NOT NULL,
-  abstract TEXT NOT NULL,
-  year INTEGER NOT NULL,
-  database TEXT NOT NULL,
-  nature TEXT NOT NULL,
-  inclusion_criterion TEXT NOT NULL,
-  reason TEXT,
-  user_name TEXT,
-  user_email TEXT
-);
+  -- Habilitar RLS
+  ALTER TABLE publications ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "Public Access" ON publications FOR ALL USING (true);`}
+                    </pre>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(`CREATE TABLE publications (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    authors TEXT NOT NULL,
+    title TEXT NOT NULL,
+    abstract TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    database TEXT NOT NULL,
+    nature TEXT NOT NULL,
+    inclusion_criterion TEXT NOT NULL,
+    reason TEXT,
+    user_name TEXT,
+    user_email TEXT
+  );
 
--- Habilitar RLS
-ALTER TABLE publications ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public Access" ON publications FOR ALL USING (true);`);
-                      alert('SQL copiado!');
-                    }}
-                    className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-white text-[10px] font-bold uppercase tracking-widest"
-                  >
-                    Copiar
-                  </button>
+  -- Habilitar RLS
+  ALTER TABLE publications ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "Public Access" ON publications FOR ALL USING (true);`);
+                        alert('SQL copiado!');
+                      }}
+                      className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-white text-[10px] font-bold uppercase tracking-widest"
+                    >
+                      Copiar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="mt-12 text-center">
+            
+            <div className="mt-12 text-center">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">
+                LAPSI &copy; 2026 &bull; Liga Acadêmica de Psicologia e Saúde Mental
+              </p>
+            </div>
+          </footer>
+        )}
+        {!isAdmin && (
+          <footer className="max-w-7xl mx-auto px-6 pb-20 text-center">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">
               LAPSI &copy; 2026 &bull; Liga Acadêmica de Psicologia e Saúde Mental
             </p>
-          </div>
-        </footer>
+          </footer>
+        )}
       </div>
     </div>
   );
