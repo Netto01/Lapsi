@@ -30,6 +30,7 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
     reason: '',
     user_name: '',
     user_email: '',
+    status: 'pending',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

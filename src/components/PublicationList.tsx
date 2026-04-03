@@ -1,5 +1,5 @@
 import { Publication } from '../types';
-import { Search, Trash2, Calendar, BookOpen, Database, User, Tag, ChevronRight, Filter } from 'lucide-react';
+import { Search, Trash2, Calendar, BookOpen, Database, User, Tag, ChevronRight, Filter, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -88,6 +88,14 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                       }`}>
                         {pub.inclusion_criterion}
                       </span>
+                      <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full border ${
+                        pub.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                        pub.status === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-100' :
+                        'bg-amber-50 text-amber-700 border-amber-100'
+                      }`}>
+                        {pub.status === 'approved' ? 'Aprovado' : 
+                         pub.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                      </span>
                     </div>
                     <h3 className="text-2xl font-serif font-bold text-slate-900 leading-tight group-hover:text-brand-900 transition-colors">
                       {pub.title}
@@ -125,6 +133,15 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                     <Tag className="w-4 h-4 text-brand-400" />
                     <span className="truncate">Justificativa: {pub.reason || 'Não informada'}</span>
                   </div>
+                  {pub.review_comment && (
+                    <div className="w-full mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
+                      <MessageSquare className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Feedback do Admin</p>
+                        <p className="text-xs text-slate-600 leading-relaxed italic">{pub.review_comment}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1 text-brand-600 text-xs font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform cursor-pointer">
                     <span>Detalhes</span>
                     <ChevronRight className="w-4 h-4" />

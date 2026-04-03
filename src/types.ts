@@ -12,6 +12,8 @@ export type CriterioInclusao =
   | 'Pela leitura do artigo completo' 
   | 'Não incluso';
 
+export type PublicationStatus = 'pending' | 'approved' | 'rejected';
+
 export interface Publication {
   id: string;
   created_at: string;
@@ -25,6 +27,8 @@ export interface Publication {
   reason: string;
   user_name: string;
   user_email: string;
+  status: PublicationStatus;
+  review_comment?: string;
 }
 
 export type PublicationInsert = Omit<Publication, 'id' | 'created_at'>;
