@@ -27,8 +27,24 @@ export interface Publication {
   reason: string;
   user_name: string;
   user_email: string;
+  user_role: 'ligante' | 'professor';
   status: PublicationStatus;
   review_comment?: string;
+}
+
+export interface Profile {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'ligante' | 'professor';
+  created_at: string;
+}
+
+export interface AdminAssignment {
+  id: string;
+  admin_email: string;
+  assigned_user_email: string;
+  created_at: string;
 }
 
 export type PublicationInsert = Omit<Publication, 'id' | 'created_at'>;

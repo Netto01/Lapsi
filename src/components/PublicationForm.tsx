@@ -30,6 +30,7 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
     reason: '',
     user_name: '',
     user_email: '',
+    user_role: 'ligante',
     status: 'pending',
   });
 
@@ -51,6 +52,13 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
         .insert([submissionData]);
 
       if (error) throw error;
+
+      // Also update profile role if it exists
+      await supabase
+        .from('profiles')
+        .update({ role: formData.user_role })
+        .eq('email', submissionData.user_email);
+
       onSuccess();
     } catch (error) {
       console.error('Error saving publication:', error);
@@ -83,6 +91,34 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
       </div>
 
       <form onSubmit={handleSubmit} className="p-8 space-y-8">
+        <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identificação:</p>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input 
+                type="radio" 
+                name="user_role" 
+                value="ligante"
+                checked={formData.user_role === 'ligante'}
+                onChange={() => setFormData({ ...formData, user_role: 'ligante' })}
+                className="w-4 h-4 text-brand-600 focus:ring-brand-500 border-slate-300"
+              />
+              <span className={`text-xs font-bold uppercase tracking-widest ${formData.user_role === 'ligante' ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-600'}`}>Sou Ligante</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input 
+                type="radio" 
+                name="user_role" 
+                value="professor"
+                checked={formData.user_role === 'professor'}
+                onChange={() => setFormData({ ...formData, user_role: 'professor' })}
+                className="w-4 h-4 text-brand-600 focus:ring-brand-500 border-slate-300"
+              />
+              <span className={`text-xs font-bold uppercase tracking-widest ${formData.user_role === 'professor' ? 'text-brand-700' : 'text-slate-400 group-hover:text-slate-600'}`}>Sou Professor</span>
+            </label>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-6">
           <div className="space-y-1">
             <label className={labelClasses}>

@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { supabase, isConfigured } from './lib/supabase';
-import { Publication } from './types';
-import { ADMIN_EMAILS } from './constants';
+import { Publication, AdminAssignment } from './types';
+import { ADMIN_EMAILS, SUPER_ADMIN_EMAILS } from './constants';
 import PublicationForm from './components/PublicationForm';
 import PublicationList from './components/PublicationList';
 import Stats from './components/Stats';
 import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
 import Criteria from './components/Criteria';
-import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, ShieldCheck } from 'lucide-react';
+import ReviewArchive from './components/ReviewArchive';
+import PermissionsManager from './components/PermissionsManager';
+import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, ShieldCheck, Key } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Session } from '@supabase/supabase-js';
 
@@ -18,7 +20,9 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [session, setSession] = useState<Session | null>(null);
-  const [view, setView] = useState<'dashboard' | 'admin'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'admin' | 'archive' | 'permissions'>('dashboard');
+  const [assignments, setAssignments] = useState<AdminAssignment[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,10 +41,49 @@ export default function App() {
   useEffect(() => {
     if (session) {
       fetchPublications();
+      fetchProfiles();
     }
   }, [session]);
 
   const isAdmin = session?.user?.email ? ADMIN_EMAILS.includes(session.user.email) : false;
+  const isSuperAdmin = session?.user?.email ? SUPER_ADMIN_EMAILS.includes(session.user.email) : false;
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchAssignments();
+    }
+  }, [isAdmin]);
+
+  async function fetchProfiles() {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('full_name');
+      if (error) {
+        if (error.code === 'PGRST116' || error.message.includes('relation "profiles" does not exist')) {
+          console.warn('Profiles table not yet created. Please run the SQL script.');
+          return;
+        }
+        throw error;
+      }
+      setProfiles(data || []);
+    } catch (error) {
+      console.error('Error fetching profiles:', error);
+    }
+  }
+
+  async function fetchAssignments() {
+    try {
+      const { data, error } = await supabase
+        .from('admin_assignments')
+        .select('*');
+      if (error) throw error;
+      setAssignments(data || []);
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+    }
+  }
 
   async function fetchPublications() {
     try {
@@ -185,6 +228,32 @@ export default function App() {
                 Painel Admin
               </button>
             )}
+
+            <button 
+              onClick={() => setView('archive')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
+                view === 'archive' 
+                  ? 'bg-blue-50 text-blue-700 border-blue-100' 
+                  : 'text-slate-400 border-transparent hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              Arquivo de Revisão
+            </button>
+
+            {isSuperAdmin && (
+              <button 
+                onClick={() => setView('permissions')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
+                  view === 'permissions' 
+                    ? 'bg-brand-900 text-white border-brand-900 shadow-lg shadow-brand-900/20' 
+                    : 'text-slate-400 border-transparent hover:text-brand-600 hover:bg-brand-50'
+                }`}
+              >
+                <Key className="w-4 h-4" />
+                Permissões
+              </button>
+            )}
           </div>
 
           <div className="pt-8 space-y-1">
@@ -227,22 +296,42 @@ export default function App() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
               <h2 className="text-4xl font-serif font-bold text-slate-900">
-                {view === 'admin' ? 'Painel Administrativo' : 'Bem-vindo, Ligante'}
+                {view === 'admin' ? 'Painel Administrativo' : view === 'archive' ? 'Arquivo de Revisão' : view === 'permissions' ? 'Gestão de Permissões' : 'Bem-vindo, Ligante'}
               </h2>
               <p className="text-slate-500 font-medium">
                 {view === 'admin' 
                   ? 'Visão geral de todas as ações e registros do sistema.' 
+                  : view === 'archive'
+                  ? 'Consulte os trabalhos aprovados e rejeitados pela banca.'
+                  : view === 'permissions'
+                  ? 'Configure quais administradores podem revisar cada ligante.'
                   : 'Gerencie e organize as evidências científicas da LAPSI.'}
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest bg-white px-4 py-2 rounded-full border border-slate-100 academic-shadow">
               <Info className="w-4 h-4 text-brand-500" />
-              <span>{view === 'admin' ? 'Controle Geral' : 'Visão Geral do Projeto'}</span>
+              <span>{view === 'admin' ? 'Controle Geral' : view === 'archive' ? 'Consulta Pública' : view === 'permissions' ? 'Segurança' : 'Visão Geral do Projeto'}</span>
             </div>
           </div>
 
           {view === 'admin' ? (
-            <AdminDashboard publications={publications} onUpdateStatus={handleUpdateStatus} />
+            <AdminDashboard 
+              publications={publications} 
+              onUpdateStatus={handleUpdateStatus} 
+              isSuperAdmin={isSuperAdmin}
+              assignments={assignments}
+              onUpdateAssignments={fetchAssignments}
+              currentAdminEmail={session?.user?.email || ''}
+            />
+          ) : view === 'archive' ? (
+            <ReviewArchive publications={publications} />
+          ) : view === 'permissions' ? (
+            <PermissionsManager 
+              assignments={assignments} 
+              onUpdateAssignments={fetchAssignments} 
+              publications={publications}
+              profiles={profiles}
+            />
           ) : (
             <>
               {/* Criteria Section */}

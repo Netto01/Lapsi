@@ -17,3 +17,10 @@ export const ADMIN_EMAILS = [
   'iuripereirapsi@rede.ulbra.br',
   'netoarlindo389@gmail.com'
 ];
+
+export const SUPER_ADMIN_EMAILS = [
+  'netoarlindo389@gmail.com',
+  'gabrielmasc@rede.ulbra.br',
+  'alinne.aires@rede.ulbra.br',
+  'lapsiulbra@gmail.com'
+];

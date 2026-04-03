@@ -104,6 +104,21 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                       <User className="w-4 h-4 text-brand-400" />
                       <span>{pub.authors}</span>
                     </div>
+                    <div className="flex items-center gap-2 pt-2">
+                      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500">
+                        {pub.user_name?.substring(0, 2).toUpperCase() || '??'}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-700">{pub.user_name}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest border ${
+                          pub.user_role === 'professor' 
+                            ? 'bg-amber-50 text-amber-600 border-amber-100' 
+                            : 'bg-slate-50 text-slate-500 border-slate-100'
+                        }`}>
+                          {pub.user_role || 'ligante'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   
                   <button

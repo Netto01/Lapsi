@@ -1,14 +1,27 @@
 import { useState } from 'react';
-import { Publication, PublicationStatus } from '../types';
+import { Publication, PublicationStatus, AdminAssignment } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { ADMIN_EMAILS } from '../constants';
 
 interface AdminDashboardProps {
   publications: Publication[];
   onUpdateStatus: (id: string, status: 'approved' | 'rejected', comment?: string) => void;
+  isSuperAdmin: boolean;
+  assignments: AdminAssignment[];
+  onUpdateAssignments: () => void;
+  currentAdminEmail: string;
 }
 
-export default function AdminDashboard({ publications, onUpdateStatus }: AdminDashboardProps) {
+export default function AdminDashboard({ 
+  publications, 
+  onUpdateStatus, 
+  isSuperAdmin, 
+  assignments, 
+  onUpdateAssignments,
+  currentAdminEmail
+}: AdminDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | 'all'>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,12 +38,20 @@ export default function AdminDashboard({ publications, onUpdateStatus }: AdminDa
     }
   };
 
-  const uniqueUsers = Array.from(new Set(publications.map(p => p.user_email))).map(email => {
-    const pub = publications.find(p => p.user_email === email);
+  const assignedUserEmails = assignments
+    .filter(a => a.admin_email === currentAdminEmail)
+    .map(a => a.assigned_user_email);
+
+  const visiblePublications = isSuperAdmin 
+    ? publications 
+    : publications.filter(p => assignedUserEmails.includes(p.user_email));
+
+  const uniqueUsers = Array.from(new Set(visiblePublications.map(p => p.user_email))).map(email => {
+    const pub = visiblePublications.find(p => p.user_email === email);
     return { email, name: pub?.user_name || email };
   });
 
-  const filteredPublications = publications.filter(pub => {
+  const filteredPublications = visiblePublications.filter(pub => {
     const matchesStatus = statusFilter === 'all' || pub.status === statusFilter;
     const matchesUser = userFilter === 'all' || pub.user_email === userFilter;
     const matchesSearch = pub.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -38,9 +59,9 @@ export default function AdminDashboard({ publications, onUpdateStatus }: AdminDa
     return matchesStatus && matchesUser && matchesSearch;
   });
 
-  const total = publications.length;
-  const pending = publications.filter(p => p.status === 'pending').length;
-  const approved = publications.filter(p => p.status === 'approved').length;
+  const total = visiblePublications.length;
+  const pending = visiblePublications.filter(p => p.status === 'pending').length;
+  const approved = visiblePublications.filter(p => p.status === 'approved').length;
 
   const stats = [
     { label: 'Total de Registros', value: total, icon: FileText, color: 'text-brand-600', bg: 'bg-brand-50' },
@@ -50,7 +71,7 @@ export default function AdminDashboard({ publications, onUpdateStatus }: AdminDa
 
   return (
     <div className="space-y-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
         {stats.map((stat, idx) => (
           <motion.div 
             key={stat.label}
@@ -103,19 +124,21 @@ export default function AdminDashboard({ publications, onUpdateStatus }: AdminDa
               </select>
             </div>
 
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200">
-              <User className="w-3.5 h-3.5 text-slate-400" />
-              <select 
-                className="text-xs font-bold text-slate-600 uppercase tracking-widest outline-none bg-transparent max-w-[200px]"
-                value={userFilter}
-                onChange={(e) => setUserFilter(e.target.value)}
-              >
-                <option value="all">Todos os Usuários</option>
-                {uniqueUsers.map(user => (
-                  <option key={user.email} value={user.email}>{user.name}</option>
-                ))}
-              </select>
-            </div>
+            {isSuperAdmin && (
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200">
+                <User className="w-3.5 h-3.5 text-slate-400" />
+                <select 
+                  className="text-xs font-bold text-slate-600 uppercase tracking-widest outline-none bg-transparent max-w-[200px]"
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value)}
+                >
+                  <option value="all">Todos os Usuários</option>
+                  {uniqueUsers.map(user => (
+                    <option key={user.email} value={user.email}>{user.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
         
@@ -153,7 +176,16 @@ export default function AdminDashboard({ publications, onUpdateStatus }: AdminDa
                         {pub.user_name?.substring(0, 2).toUpperCase() || '??'}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-slate-900">{pub.user_name || 'Usuário'}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold text-slate-900">{pub.user_name || 'Usuário'}</p>
+                          <span className={`px-1.5 py-0.5 rounded-full text-[7px] font-bold uppercase tracking-widest border ${
+                            pub.user_role === 'professor' 
+                              ? 'bg-amber-50 text-amber-600 border-amber-100' 
+                              : 'bg-slate-50 text-slate-500 border-slate-100'
+                          }`}>
+                            {pub.user_role || 'ligante'}
+                          </span>
+                        </div>
                         <p className="text-[10px] text-slate-400">{pub.user_email}</p>
                       </div>
                     </div>
