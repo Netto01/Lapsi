@@ -38,29 +38,27 @@ export default function ResourcesView({
     category: 'Repositório' as AcademicResource['category']
   });
 
-  const students = profiles.filter(p => p.role === 'ligante');
+  const professors = profiles.filter(p => p.role === 'professor');
 
   const getAdminForStudent = (email: string) => {
     return assignments.find(a => a.assigned_user_email === email)?.admin_email;
   };
 
+  const myAdminEmail = getAdminForStudent(currentAdminEmail);
+
   const myAssignedStudents = assignments
     .filter(a => a.admin_email === currentAdminEmail)
     .map(a => a.assigned_user_email);
 
-  // Group students by admin for Super Admin view
-  const groupedStudents = students.reduce((acc, student) => {
-    const adminEmail = getAdminForStudent(student.email) || 'Sem Administrador';
-    if (!acc[adminEmail]) acc[adminEmail] = [];
-    acc[adminEmail].push(student);
-    return acc;
-  }, {} as Record<string, Profile[]>);
-
-  // Filter resources for students: only show if they have access
-  // Admins and SuperAdmins see everything
+  // Filter resources for students: show if they have direct access OR if their admin has access
   const visibleResources = (isAdmin || isSuperAdmin) 
     ? resources 
-    : resources.filter(res => resourceAccess.some(acc => acc.resource_id === res.id && acc.user_email === currentAdminEmail));
+    : resources.filter(res => 
+        resourceAccess.some(acc => 
+          acc.resource_id === res.id && 
+          (acc.user_email === currentAdminEmail || acc.user_email === myAdminEmail)
+        )
+      );
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +74,7 @@ export default function ResourcesView({
 
       if (resError) throw resError;
 
-      // If students were selected, grant them access
+      // If professors were selected, grant them access
       if (selectedStudents.length > 0 && resData) {
         const accessRecords = selectedStudents.map(email => ({
           resource_id: resData.id,
@@ -104,7 +102,7 @@ export default function ResourcesView({
     }
   };
 
-  const toggleStudentSelection = (email: string) => {
+  const toggleProfessorSelection = (email: string) => {
     setSelectedStudents(prev => 
       prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
     );
@@ -237,35 +235,31 @@ export default function ResourcesView({
 
               <div className="md:col-span-2 space-y-4">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                  <Users className="w-3 h-3" /> Atribuir a Ligantes (Opcional)
+                  <Shield className="w-3 h-3" /> Atribuir a Professores (Opcional)
                 </label>
-                <div className="space-y-6 p-6 bg-slate-50 border border-slate-200 rounded-2xl max-h-64 overflow-y-auto custom-scrollbar">
-                  {Object.entries(groupedStudents).map(([adminEmail, studentList]) => (
-                    <div key={adminEmail} className="space-y-2">
-                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <Shield className="w-3 h-3" /> Banca: {adminEmail}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {studentList.map(student => (
-                          <button
-                            key={student.id}
-                            type="button"
-                            onClick={() => toggleStudentSelection(student.email)}
-                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${
-                              selectedStudents.includes(student.email)
-                                ? 'bg-brand-600 text-white border-brand-600'
-                                : 'bg-white text-slate-500 border-slate-200 hover:border-brand-300'
-                            }`}
-                          >
-                            {student.full_name || student.email}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  {students.length === 0 && (
-                    <p className="text-[10px] text-slate-400 italic">Nenhum ligante cadastrado no sistema.</p>
-                  )}
+                <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                  <p className="text-[9px] text-slate-400 font-medium leading-relaxed">
+                    Ao atribuir uma fonte a um professor, todos os ligantes vinculados a ele terão acesso automático a este material no dashboard.
+                  </p>
+                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto custom-scrollbar">
+                    {professors.map(prof => (
+                      <button
+                        key={prof.id}
+                        type="button"
+                        onClick={() => toggleProfessorSelection(prof.email)}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${
+                          selectedStudents.includes(prof.email)
+                            ? 'bg-brand-600 text-white border-brand-600'
+                            : 'bg-white text-slate-500 border-slate-200 hover:border-brand-300'
+                        }`}
+                      >
+                        {prof.full_name || prof.email}
+                      </button>
+                    ))}
+                    {professors.length === 0 && (
+                      <p className="text-[10px] text-slate-400 italic">Nenhum professor cadastrado no sistema.</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
