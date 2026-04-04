@@ -127,7 +127,7 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                   
                   <button
                     onClick={() => handleDelete(pub.id)}
-                    className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0"
+                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>

@@ -232,7 +232,7 @@ export default function PermissionsManager({ assignments, onUpdateAssignments, p
                   </div>
                   <button 
                     onClick={() => handleDeleteAssignment(assignment.id)}
-                    className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
                     title="Remover Atribuição"
                   >
                     <Trash2 className="w-4 h-4" />

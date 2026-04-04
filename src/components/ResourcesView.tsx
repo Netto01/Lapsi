@@ -303,7 +303,7 @@ export default function ResourcesView({
                     className={`p-2 rounded-lg transition-all ${
                       managingResourceId === resource.id 
                         ? 'bg-brand-100 text-brand-600' 
-                        : 'text-slate-300 hover:text-brand-600 hover:bg-brand-50'
+                        : 'text-slate-400 hover:text-brand-600 hover:bg-brand-50'
                     }`}
                     title="Gerenciar Acesso"
                   >
@@ -313,7 +313,7 @@ export default function ResourcesView({
                 {isSuperAdmin && (
                   <button
                     onClick={() => handleDelete(resource.id)}
-                    className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                     title="Remover"
                   >
                     <Trash2 className="w-4 h-4" />
