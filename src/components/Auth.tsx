@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { LogIn, Loader2, Mail, Lock, UserPlus, User } from 'lucide-react';
+import { LogIn, Loader2, Mail, Lock, UserPlus, User, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -45,6 +47,27 @@ export default function Auth() {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setMessage({ type: 'error', text: 'Por favor, insira seu e-mail para recuperar a senha.' });
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      });
+      if (error) throw error;
+      setMessage({ type: 'success', text: 'Instruções de recuperação enviadas para o seu e-mail.' });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Erro ao solicitar recuperação de senha.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-6 font-sans">
       <motion.div 
@@ -62,19 +85,21 @@ export default function Auth() {
             />
           </div>
           <h1 className="text-3xl font-serif font-bold mb-3">
-            {isSignUp ? 'Criar Conta' : 'Acesso LAPSI'}
+            {isResettingPassword ? 'Recuperar Senha' : isSignUp ? 'Criar Conta' : 'Acesso LAPSI'}
           </h1>
           <p className="text-brand-200 text-sm leading-relaxed">
-            {isSignUp 
+            {isResettingPassword
+              ? 'Enviaremos um link para você redefinir sua senha.'
+              : isSignUp 
               ? 'Junte-se à Liga Acadêmica de Psicologia e Saúde Mental.' 
               : 'Entre com suas credenciais para acessar o sistema.'}
           </p>
         </div>
         
         <div className="p-10">
-          <form onSubmit={handleAuth} className="space-y-6">
+          <form onSubmit={isResettingPassword ? handleResetPassword : handleAuth} className="space-y-6">
             <AnimatePresence mode="wait">
-              {isSignUp && (
+              {!isResettingPassword && isSignUp && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -140,20 +165,50 @@ export default function Auth() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Senha</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                <input
-                  required
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-slate-900"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
+            <AnimatePresence mode="wait">
+              {!isResettingPassword && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2 overflow-hidden"
+                >
+                  <div className="flex items-center justify-between px-1">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Senha</label>
+                    {!isSignUp && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsResettingPassword(true);
+                          setMessage(null);
+                        }}
+                        className="text-[10px] font-bold text-brand-600 hover:text-brand-700 uppercase tracking-widest"
+                      >
+                        Esqueceu a senha?
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                    <input
+                      required={!isResettingPassword}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-slate-900"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {message && (
               <div className={`p-4 rounded-2xl text-sm font-medium ${
@@ -168,21 +223,33 @@ export default function Auth() {
               disabled={loading}
               className="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/20 flex items-center justify-center gap-3 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isSignUp ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />)}
-              {isSignUp ? 'Criar Conta' : 'Entrar'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isResettingPassword ? <KeyRound className="w-4 h-4" /> : isSignUp ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
+              {isResettingPassword ? 'Enviar Link' : isSignUp ? 'Criar Conta' : 'Entrar'}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <button 
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setMessage(null);
-              }}
-              className="text-xs font-bold text-brand-600 uppercase tracking-widest hover:underline"
-            >
-              {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Cadastre-se'}
-            </button>
+          <div className="mt-8 text-center flex flex-col gap-3">
+            {isResettingPassword ? (
+              <button 
+                onClick={() => {
+                  setIsResettingPassword(false);
+                  setMessage(null);
+                }}
+                className="text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700"
+              >
+                Voltar para o Login
+              </button>
+            ) : (
+              <button 
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setMessage(null);
+                }}
+                className="text-xs font-bold text-brand-600 uppercase tracking-widest hover:underline"
+              >
+                {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Cadastre-se'}
+              </button>
+            )}
           </div>
           
           <p className="mt-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
