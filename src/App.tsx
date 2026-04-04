@@ -10,9 +10,11 @@ import AdminDashboard from './components/AdminDashboard';
 import Criteria from './components/Criteria';
 import ReviewArchive from './components/ReviewArchive';
 import PermissionsManager from './components/PermissionsManager';
-import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, ShieldCheck, Key } from 'lucide-react';
+import ResourcesView from './components/ResourcesView';
+import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, ShieldCheck, Key, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Session } from '@supabase/supabase-js';
+import { AcademicResource, UserResourceAccess } from './types';
 
 export default function App() {
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -20,9 +22,11 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [session, setSession] = useState<Session | null>(null);
-  const [view, setView] = useState<'dashboard' | 'admin' | 'archive' | 'permissions'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'admin' | 'archive' | 'permissions' | 'resources'>('dashboard');
   const [assignments, setAssignments] = useState<AdminAssignment[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [resources, setResources] = useState<AcademicResource[]>([]);
+  const [resourceAccess, setResourceAccess] = useState<UserResourceAccess[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -42,6 +46,8 @@ export default function App() {
     if (session) {
       fetchPublications();
       fetchProfiles();
+      fetchResources();
+      fetchResourceAccess();
     }
   }, [session]);
 
@@ -53,6 +59,43 @@ export default function App() {
       fetchAssignments();
     }
   }, [isAdmin]);
+
+  async function fetchResourceAccess() {
+    try {
+      const { data, error } = await supabase
+        .from('user_resource_access')
+        .select('*');
+      if (error) {
+        if (error.message.includes('relation "user_resource_access" does not exist')) {
+          console.warn('user_resource_access table not yet created.');
+          return;
+        }
+        throw error;
+      }
+      setResourceAccess(data || []);
+    } catch (error) {
+      console.error('Error fetching resource access:', error);
+    }
+  }
+
+  async function fetchResources() {
+    try {
+      const { data, error } = await supabase
+        .from('academic_resources')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        if (error.message.includes('relation "academic_resources" does not exist')) {
+          console.warn('academic_resources table not yet created.');
+          return;
+        }
+        throw error;
+      }
+      setResources(data || []);
+    } catch (error) {
+      console.error('Error fetching resources:', error);
+    }
+  }
 
   async function fetchProfiles() {
     try {
@@ -246,6 +289,18 @@ export default function App() {
               Arquivo de Revisão
             </button>
 
+            <button 
+              onClick={() => setView('resources')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
+                view === 'resources' 
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-100' 
+                  : 'text-slate-400 border-transparent hover:text-indigo-600 hover:bg-indigo-50'
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              Fontes de Pesquisa
+            </button>
+
             {isSuperAdmin && (
               <button 
                 onClick={() => setView('permissions')}
@@ -301,7 +356,7 @@ export default function App() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
               <h2 className="text-4xl font-serif font-bold text-slate-900">
-                {view === 'admin' ? 'Painel Administrativo' : view === 'archive' ? 'Arquivo de Revisão' : view === 'permissions' ? 'Gestão de Permissões' : 'Bem-vindo, Ligante'}
+                {view === 'admin' ? 'Painel Administrativo' : view === 'archive' ? 'Arquivo de Revisão' : view === 'permissions' ? 'Gestão de Permissões' : view === 'resources' ? 'Fontes de Pesquisa' : 'Bem-vindo, Ligante'}
               </h2>
               <p className="text-slate-500 font-medium">
                 {view === 'admin' 
@@ -310,12 +365,14 @@ export default function App() {
                   ? 'Consulte os trabalhos aprovados e rejeitados pela banca.'
                   : view === 'permissions'
                   ? 'Configure quais administradores podem revisar cada ligante.'
+                  : view === 'resources'
+                  ? 'Acesse repositórios e revistas acadêmicas para suas pesquisas.'
                   : 'Gerencie e organize as evidências científicas da LAPSI.'}
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest bg-white px-4 py-2 rounded-full border border-slate-100 academic-shadow">
               <Info className="w-4 h-4 text-brand-500" />
-              <span>{view === 'admin' ? 'Controle Geral' : view === 'archive' ? 'Consulta Pública' : view === 'permissions' ? 'Segurança' : 'Visão Geral do Projeto'}</span>
+              <span>{view === 'admin' ? 'Controle Geral' : view === 'archive' ? 'Consulta Pública' : view === 'permissions' ? 'Segurança' : view === 'resources' ? 'Repositórios' : 'Visão Geral do Projeto'}</span>
             </div>
           </div>
 
@@ -337,6 +394,17 @@ export default function App() {
               publications={publications}
               profiles={profiles}
               currentAdminEmail={session?.user?.email || ''}
+            />
+          ) : view === 'resources' ? (
+            <ResourcesView 
+              resources={resources} 
+              isSuperAdmin={isSuperAdmin} 
+              isAdmin={isAdmin}
+              onUpdate={fetchResources}
+              assignments={assignments}
+              currentAdminEmail={session?.user?.email || ''}
+              resourceAccess={resourceAccess}
+              onUpdateAccess={fetchResourceAccess}
             />
           ) : (
             <>

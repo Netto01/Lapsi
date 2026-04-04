@@ -50,4 +50,21 @@ export interface AdminAssignment {
   created_at: string;
 }
 
+export interface AcademicResource {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  category: 'Repositório' | 'Revista' | 'Outro';
+  created_at: string;
+}
+
+export interface UserResourceAccess {
+  id: string;
+  resource_id: string;
+  user_email: string;
+  granted_by_email: string;
+  created_at: string;
+}
+
 export type PublicationInsert = Omit<Publication, 'id' | 'created_at'>;

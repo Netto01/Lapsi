@@ -86,6 +86,13 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
       </div>
 
       <form onSubmit={handleSubmit} className="p-8 space-y-8">
+        <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-start gap-3 mb-2">
+          <Database className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+          <p className="text-[10px] text-indigo-700 leading-relaxed">
+            <strong>Dica:</strong> Se você ainda não tem os dados completos, consulte a aba <strong>"Fontes de Pesquisa"</strong> no menu lateral para acessar os repositórios e revistas recomendados pela Liga.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 gap-6">
           <div className="space-y-1">
             <label className={labelClasses}>
