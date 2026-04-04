@@ -405,9 +405,46 @@ export default function App() {
               currentAdminEmail={session?.user?.email || ''}
               resourceAccess={resourceAccess}
               onUpdateAccess={fetchResourceAccess}
+              profiles={profiles}
             />
           ) : (
             <>
+              {/* Academic Resources for Students */}
+              {!isAdmin && !isSuperAdmin && resources.filter(res => resourceAccess.some(acc => acc.resource_id === res.id && acc.user_email === session?.user?.email)).length > 0 && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-serif font-bold text-slate-900">Fontes de Pesquisa</h3>
+                    <Globe className="w-5 h-5 text-indigo-500" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {resources
+                      .filter(res => resourceAccess.some(acc => acc.resource_id === res.id && acc.user_email === session?.user?.email))
+                      .map((resource) => (
+                        <div key={resource.id} className="bg-white rounded-[2rem] academic-shadow border border-slate-100 p-6 flex flex-col group hover:border-indigo-200 transition-all">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                              resource.category === 'Repositório' ? 'bg-blue-50 text-blue-600' :
+                              resource.category === 'Revista' ? 'bg-emerald-50 text-emerald-600' :
+                              'bg-slate-50 text-slate-600'
+                            }`}>
+                              {resource.category === 'Repositório' ? <Database className="w-5 h-5" /> :
+                               resource.category === 'Revista' ? <BookOpen className="w-5 h-5" /> :
+                               <Globe className="w-5 h-5" />}
+                            </div>
+                            <a href={resource.url} target="_blank" rel="noopener noreferrer" className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{resource.category}</span>
+                            <h4 className="text-sm font-bold text-slate-900">{resource.title}</h4>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
               {/* Criteria Section */}
               <Criteria />
 
@@ -438,10 +475,6 @@ export default function App() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-serif font-bold text-slate-900">Repositório de Publicações</h3>
-                    <div className="flex items-center gap-2 text-xs font-bold text-brand-600 uppercase tracking-widest cursor-pointer hover:underline">
-                      <Info className="w-4 h-4" />
-                      <span>Guia de Inclusão</span>
-                    </div>
                   </div>
                   
                   {loading ? (

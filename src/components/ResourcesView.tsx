@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AcademicResource, AdminAssignment, UserResourceAccess } from '../types';
+import { AcademicResource, AdminAssignment, UserResourceAccess, Profile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, Plus, Trash2, ExternalLink, BookOpen, Database, Info, X, Check, Users, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -13,6 +13,7 @@ interface ResourcesViewProps {
   currentAdminEmail: string;
   resourceAccess: UserResourceAccess[];
   onUpdateAccess: () => void;
+  profiles: Profile[];
 }
 
 export default function ResourcesView({ 
@@ -23,11 +24,13 @@ export default function ResourcesView({
   assignments,
   currentAdminEmail,
   resourceAccess,
-  onUpdateAccess
+  onUpdateAccess,
+  profiles
 }: ResourcesViewProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [managingResourceId, setManagingResourceId] = useState<string | null>(null);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [newResource, setNewResource] = useState({
     title: '',
     url: '',
@@ -35,9 +38,23 @@ export default function ResourcesView({
     category: 'Repositório' as AcademicResource['category']
   });
 
+  const students = profiles.filter(p => p.role === 'ligante');
+
+  const getAdminForStudent = (email: string) => {
+    return assignments.find(a => a.assigned_user_email === email)?.admin_email;
+  };
+
   const myAssignedStudents = assignments
     .filter(a => a.admin_email === currentAdminEmail)
     .map(a => a.assigned_user_email);
+
+  // Group students by admin for Super Admin view
+  const groupedStudents = students.reduce((acc, student) => {
+    const adminEmail = getAdminForStudent(student.email) || 'Sem Administrador';
+    if (!acc[adminEmail]) acc[adminEmail] = [];
+    acc[adminEmail].push(student);
+    return acc;
+  }, {} as Record<string, Profile[]>);
 
   // Filter resources for students: only show if they have access
   // Admins and SuperAdmins see everything
@@ -51,21 +68,46 @@ export default function ResourcesView({
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data: resData, error: resError } = await supabase
         .from('academic_resources')
-        .insert([newResource]);
+        .insert([newResource])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (resError) throw resError;
+
+      // If students were selected, grant them access
+      if (selectedStudents.length > 0 && resData) {
+        const accessRecords = selectedStudents.map(email => ({
+          resource_id: resData.id,
+          user_email: email,
+          granted_by_email: currentAdminEmail
+        }));
+
+        const { error: accessError } = await supabase
+          .from('user_resource_access')
+          .insert(accessRecords);
+
+        if (accessError) throw accessError;
+        onUpdateAccess();
+      }
       
       onUpdate();
       setShowAddForm(false);
       setNewResource({ title: '', url: '', description: '', category: 'Repositório' });
+      setSelectedStudents([]);
     } catch (error) {
       console.error('Error adding resource:', error);
       alert('Erro ao adicionar recurso.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleStudentSelection = (email: string) => {
+    setSelectedStudents(prev => 
+      prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
+    );
   };
 
   const handleDelete = async (id: string) => {
@@ -191,6 +233,40 @@ export default function ResourcesView({
                   value={newResource.description}
                   onChange={e => setNewResource({ ...newResource, description: e.target.value })}
                 />
+              </div>
+
+              <div className="md:col-span-2 space-y-4">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <Users className="w-3 h-3" /> Atribuir a Ligantes (Opcional)
+                </label>
+                <div className="space-y-6 p-6 bg-slate-50 border border-slate-200 rounded-2xl max-h-64 overflow-y-auto custom-scrollbar">
+                  {Object.entries(groupedStudents).map(([adminEmail, studentList]) => (
+                    <div key={adminEmail} className="space-y-2">
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Shield className="w-3 h-3" /> Banca: {adminEmail}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {studentList.map(student => (
+                          <button
+                            key={student.id}
+                            type="button"
+                            onClick={() => toggleStudentSelection(student.email)}
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${
+                              selectedStudents.includes(student.email)
+                                ? 'bg-brand-600 text-white border-brand-600'
+                                : 'bg-white text-slate-500 border-slate-200 hover:border-brand-300'
+                            }`}
+                          >
+                            {student.full_name || student.email}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {students.length === 0 && (
+                    <p className="text-[10px] text-slate-400 italic">Nenhum ligante cadastrado no sistema.</p>
+                  )}
+                </div>
               </div>
 
               <div className="md:col-span-2 flex justify-end">
