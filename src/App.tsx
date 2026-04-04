@@ -53,6 +53,7 @@ export default function App() {
 
   const isAdmin = session?.user?.email ? ADMIN_EMAILS.includes(session.user.email) : false;
   const isSuperAdmin = session?.user?.email ? SUPER_ADMIN_EMAILS.includes(session.user.email) : false;
+  const currentUserProfile = profiles.find(p => p.email === session?.user?.email);
 
   useEffect(() => {
     if (isAdmin) {
@@ -338,9 +339,11 @@ export default function App() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold text-slate-900 truncate">
-                {session.user?.user_metadata?.full_name || session.user?.email?.split('@')[0]}
+                {currentUserProfile?.full_name || session.user?.user_metadata?.full_name || session.user?.email?.split('@')[0]}
               </p>
-              <p className="text-[9px] text-slate-400 font-medium truncate">{isAdmin ? 'Administrador' : 'Ligante'}</p>
+              <p className="text-[9px] text-slate-400 font-medium truncate">
+                {currentUserProfile?.role === 'professor' ? 'Professor' : 'Ligante'}
+              </p>
             </div>
             <button onClick={handleLogout} className="p-2 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors group">
               <LogOut className="w-4 h-4 text-slate-300 group-hover:text-rose-600" />
@@ -356,7 +359,11 @@ export default function App() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
               <h2 className="text-4xl font-serif font-bold text-slate-900">
-                {view === 'admin' ? 'Painel Administrativo' : view === 'archive' ? 'Arquivo de Revisão' : view === 'permissions' ? 'Gestão de Permissões' : view === 'resources' ? 'Fontes de Pesquisa' : 'Bem-vindo, Ligante'}
+                {view === 'admin' ? 'Painel Administrativo' : 
+                 view === 'archive' ? 'Arquivo de Revisão' : 
+                 view === 'permissions' ? 'Gestão de Permissões' : 
+                 view === 'resources' ? 'Fontes de Pesquisa' : 
+                 `Bem-vindo, ${currentUserProfile?.role === 'professor' ? 'Professor' : 'Ligante'} ${currentUserProfile?.full_name || session?.user?.email?.split('@')[0]}`}
               </h2>
               <p className="text-slate-500 font-medium">
                 {view === 'admin' 
