@@ -32,6 +32,7 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
     user_email: '',
     user_role: 'ligante',
     status: 'pending',
+    link: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,6 +105,18 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
               className={inputClasses}
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className={labelClasses}>
+              <Plus className="w-3.5 h-3.5" /> Link da Publicação (URL)
+            </label>
+            <input
+              placeholder="Ex: https://doi.org/... ou https://scholar.google.com/..."
+              className={inputClasses}
+              value={formData.link}
+              onChange={e => setFormData({ ...formData, link: e.target.value })}
             />
           </div>
           

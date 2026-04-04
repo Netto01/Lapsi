@@ -68,7 +68,7 @@ export default function ResourcesView({
     try {
       const { data: resData, error: resError } = await supabase
         .from('academic_resources')
-        .insert([newResource])
+        .insert([{ ...newResource, created_by_email: currentAdminEmail }])
         .select()
         .single();
 
@@ -331,6 +331,11 @@ export default function ResourcesView({
               <h4 className="text-lg font-serif font-bold text-slate-900 group-hover:text-brand-900 transition-colors">
                 {resource.title}
               </h4>
+              {resource.created_by_email && (
+                <p className="text-[8px] font-bold text-brand-600/60 uppercase tracking-widest">
+                  Criado por: {resource.created_by_email}
+                </p>
+              )}
               {resource.description && (
                 <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
                   {resource.description}
@@ -351,18 +356,25 @@ export default function ResourcesView({
                   </p>
                   <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
                     {myAssignedStudents.map(email => {
-                      const hasAccess = resourceAccess.some(a => a.resource_id === resource.id && a.user_email === email);
+                      const access = resourceAccess.find(a => a.resource_id === resource.id && a.user_email === email);
+                      const hasAccess = !!access;
                       return (
-                        <button
-                          key={email}
-                          onClick={() => toggleAccess(resource.id, email)}
-                          className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all ${
-                            hasAccess ? 'bg-brand-50 text-brand-700' : 'hover:bg-slate-50 text-slate-500'
-                          }`}
-                        >
-                          <span className="text-[10px] font-medium truncate">{email}</span>
-                          {hasAccess ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-                        </button>
+                        <div key={email} className="space-y-1">
+                          <button
+                            onClick={() => toggleAccess(resource.id, email)}
+                            className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all ${
+                              hasAccess ? 'bg-brand-50 text-brand-700' : 'hover:bg-slate-50 text-slate-500'
+                            }`}
+                          >
+                            <span className="text-[10px] font-medium truncate">{email}</span>
+                            {hasAccess ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                          </button>
+                          {hasAccess && access.granted_by_email && (
+                            <p className="text-[7px] text-brand-600/60 font-bold uppercase tracking-widest pl-2">
+                              Liberado por: {access.granted_by_email}
+                            </p>
+                          )}
+                        </div>
                       );
                     })}
                     {myAssignedStudents.length === 0 && (

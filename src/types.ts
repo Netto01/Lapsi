@@ -29,6 +29,7 @@ export interface Publication {
   user_email: string;
   user_role: 'ligante' | 'professor';
   status: PublicationStatus;
+  link?: string;
   review_comment?: string;
   reviewed_by_name?: string;
   reviewed_by_role?: 'ligante' | 'professor';
@@ -56,6 +57,7 @@ export interface AcademicResource {
   url: string;
   description?: string;
   category: 'Repositório' | 'Revista' | 'Outro';
+  created_by_email?: string;
   created_at: string;
 }
 

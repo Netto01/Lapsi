@@ -1,5 +1,5 @@
 import { Publication } from '../types';
-import { Search, Trash2, Calendar, BookOpen, Database, User, Tag, ChevronRight, Filter, MessageSquare, X, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, Trash2, Calendar, BookOpen, Database, User, Tag, ChevronRight, Filter, MessageSquare, X, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
@@ -113,7 +113,10 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                         {pub.user_name?.substring(0, 2).toUpperCase() || '??'}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-700">{pub.user_name}</span>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-slate-700">{pub.user_name}</span>
+                          <span className="text-[9px] text-slate-400 leading-none">{pub.user_email}</span>
+                        </div>
                         <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest border ${
                           pub.user_role === 'professor' 
                             ? 'bg-amber-50 text-amber-600 border-amber-100' 
@@ -148,6 +151,17 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                     <Database className="w-4 h-4 text-brand-400" />
                     <span>{pub.database}</span>
                   </div>
+                  {pub.link && (
+                    <a 
+                      href={pub.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-brand-600 text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>Link</span>
+                    </a>
+                  )}
                   <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest flex-1">
                     <Tag className="w-4 h-4 text-brand-400" />
                     <span className="truncate">Justificativa: {pub.reason || 'Não informada'}</span>
@@ -244,6 +258,21 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                     <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
                   </div>
                 </div>
+
+                {viewingPub.link && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Link para Leitura</p>
+                    <a 
+                      href={viewingPub.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-4 bg-brand-50 rounded-2xl border border-brand-100 text-brand-700 hover:bg-brand-100 transition-all group"
+                    >
+                      <ExternalLink className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-bold truncate">{viewingPub.link}</span>
+                    </a>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resumo / Abstract</p>

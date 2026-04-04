@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Publication, PublicationStatus, AdminAssignment } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ADMIN_EMAILS } from '../constants';
 
@@ -372,6 +372,21 @@ export default function AdminDashboard({
                     <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
                   </div>
                 </div>
+
+                {viewingPub.link && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Link para Leitura</p>
+                    <a 
+                      href={viewingPub.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-4 bg-brand-50 rounded-2xl border border-brand-100 text-brand-700 hover:bg-brand-100 transition-all group"
+                    >
+                      <ExternalLink className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-bold truncate">{viewingPub.link}</span>
+                    </a>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resumo / Abstract</p>

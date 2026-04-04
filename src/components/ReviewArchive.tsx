@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Publication } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, XCircle, Search, Calendar, User, Database, MessageSquare, Tag, X, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Search, Calendar, User, Database, MessageSquare, Tag, X, ChevronRight, ExternalLink } from 'lucide-react';
 
 interface ReviewArchiveProps {
   publications: Publication[];
@@ -103,8 +103,10 @@ export default function ReviewArchive({ publications }: ReviewArchiveProps) {
                       <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500">
                         {pub.user_name?.substring(0, 2).toUpperCase() || '??'}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-slate-700">{pub.user_name}</span>
+                        <span className="text-[9px] text-slate-400 leading-none">{pub.user_email}</span>
+                      </div>
                         <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest border ${
                           pub.user_role === 'professor' 
                             ? 'bg-amber-50 text-amber-600 border-amber-100' 
@@ -115,9 +117,8 @@ export default function ReviewArchive({ publications }: ReviewArchiveProps) {
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="relative mb-6">
+                  <div className="relative mb-6">
                   <p className="text-slate-600 text-sm leading-relaxed italic line-clamp-3 pl-4 border-l-2 border-slate-100">
                     "{pub.abstract}"
                   </p>
@@ -133,6 +134,17 @@ export default function ReviewArchive({ publications }: ReviewArchiveProps) {
                       <Database className="w-4 h-4 text-brand-400" />
                       <span>{pub.database}</span>
                     </div>
+                    {pub.link && (
+                      <a 
+                        href={pub.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-brand-600 text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Link</span>
+                      </a>
+                    )}
                     <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
                       <Tag className="w-4 h-4 text-brand-400" />
                       <span>Critério: {pub.inclusion_criterion}</span>
@@ -215,6 +227,21 @@ export default function ReviewArchive({ publications }: ReviewArchiveProps) {
                       <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
                     </div>
                   </div>
+
+                  {viewingPub.link && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Link para Leitura</p>
+                      <a 
+                        href={viewingPub.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-4 bg-brand-50 rounded-2xl border border-brand-100 text-brand-700 hover:bg-brand-100 transition-all group"
+                      >
+                        <ExternalLink className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        <span className="text-sm font-bold truncate">{viewingPub.link}</span>
+                      </a>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resumo / Abstract</p>
