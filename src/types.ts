@@ -30,6 +30,7 @@ export interface Publication {
   user_role: 'ligante' | 'professor';
   status: PublicationStatus;
   link?: string;
+  journal_name?: string;
   review_comment?: string;
   reviewed_by_name?: string;
   reviewed_by_role?: 'ligante' | 'professor';

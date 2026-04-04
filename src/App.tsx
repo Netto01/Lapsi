@@ -317,7 +317,7 @@ export default function App() {
             )}
           </div>
 
-          <div className="pt-8 space-y-1">
+          <div className="pt-8 space-y-2">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] px-4 mb-4">Ações</p>
             <button
               onClick={() => {
@@ -329,6 +329,15 @@ export default function App() {
               <Plus className="w-4 h-4" />
               <span>Novo Registro</span>
             </button>
+            <a
+              href="https://docs.google.com/document/d/1aAsQ3fCntQkNm-jN378-7iWdJEwJz8iu/edit?usp=drive_link&ouid=104850456356424907329&rtpof=true&sd=true"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all border border-indigo-100 active:scale-95"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Trabalho a ser desenvolvido</span>
+            </a>
           </div>
         </nav>
 
@@ -416,6 +425,32 @@ export default function App() {
             />
           ) : (
             <>
+              {/* Instructions Banner for Ligantes */}
+              {!isAdmin && !isSuperAdmin && (
+                <div className="bg-gradient-to-r from-indigo-500 to-brand-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm border border-white/20">
+                        Importante
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-serif font-bold">Trabalho a ser desenvolvido</h3>
+                    <p className="text-indigo-100 max-w-xl text-sm leading-relaxed">
+                      Acesse o documento oficial com todas as diretrizes, regras e o modelo que deve ser seguido para o desenvolvimento das pesquisas e publicações da LAPSI.
+                    </p>
+                  </div>
+                  <a 
+                    href="https://docs.google.com/document/d/1aAsQ3fCntQkNm-jN378-7iWdJEwJz8iu/edit?usp=drive_link&ouid=104850456356424907329&rtpof=true&sd=true"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 px-6 py-4 bg-white text-indigo-600 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-50 transition-all flex items-center gap-3 shadow-lg"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Trabalho a ser desenvolvido
+                  </a>
+                </div>
+              )}
+
               {/* Academic Resources for Students */}
               {!isAdmin && !isSuperAdmin && resources.filter(res => resourceAccess.some(acc => acc.resource_id === res.id && acc.user_email === session?.user?.email)).length > 0 && (
                 <div className="space-y-6">

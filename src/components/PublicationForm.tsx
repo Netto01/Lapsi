@@ -33,6 +33,7 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
     user_role: 'ligante',
     status: 'pending',
     link: '',
+    journal_name: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -188,6 +189,30 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
             </select>
           </div>
         </div>
+
+        <AnimatePresence mode="wait">
+          {formData.nature === 'Artigo' && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-1 pb-6">
+                <label className={labelClasses}>
+                  <Book className="w-3.5 h-3.5" /> Nome da Revista
+                </label>
+                <input
+                  required
+                  placeholder="Ex: Revista Brasileira de Psiquiatria"
+                  className={inputClasses}
+                  value={formData.journal_name || ''}
+                  onChange={e => setFormData({ ...formData, journal_name: e.target.value })}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">

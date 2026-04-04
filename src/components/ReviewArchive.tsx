@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Publication } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, XCircle, Search, Calendar, User, Database, MessageSquare, Tag, X, ChevronRight, ExternalLink } from 'lucide-react';
+import { CheckCircle2, XCircle, Search, Calendar, User, Database, MessageSquare, Tag, X, ChevronRight, ExternalLink, BookOpen } from 'lucide-react';
 
 interface ReviewArchiveProps {
   publications: Publication[];
@@ -126,6 +126,12 @@ export default function ReviewArchive({ publications }: ReviewArchiveProps) {
 
                 <div className="space-y-4 pt-6 border-t border-slate-50">
                   <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+                    {pub.journal_name && (
+                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
+                        <BookOpen className="w-4 h-4 text-brand-400" />
+                        <span>{pub.journal_name}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
                       <Calendar className="w-4 h-4 text-brand-400" />
                       <span>{pub.year}</span>
@@ -227,6 +233,16 @@ export default function ReviewArchive({ publications }: ReviewArchiveProps) {
                       <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
                     </div>
                   </div>
+
+                  {viewingPub.journal_name && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome da Revista</p>
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+                        <BookOpen className="w-5 h-5 text-brand-500" />
+                        <p className="text-sm text-slate-700 font-bold">{viewingPub.journal_name}</p>
+                      </div>
+                    </div>
+                  )}
 
                   {viewingPub.link && (
                     <div className="space-y-2">

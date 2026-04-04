@@ -166,6 +166,12 @@ export default function AdminDashboard({
                     >
                       <p className="text-sm font-bold text-slate-900 line-clamp-1 group-hover/title:text-brand-600 transition-colors">{pub.title}</p>
                       <p className="text-xs text-slate-400 mt-1">{pub.authors} ({pub.year})</p>
+                      {pub.journal_name && (
+                        <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                          <FileText className="w-3 h-3" />
+                          {pub.journal_name}
+                        </p>
+                      )}
                     </button>
                   </td>
                   <td className="px-8 py-6">
@@ -372,6 +378,16 @@ export default function AdminDashboard({
                     <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
                   </div>
                 </div>
+
+                {viewingPub.journal_name && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome da Revista</p>
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-brand-500" />
+                      <p className="text-sm text-slate-700 font-bold">{viewingPub.journal_name}</p>
+                    </div>
+                  </div>
+                )}
 
                 {viewingPub.link && (
                   <div className="space-y-2">
