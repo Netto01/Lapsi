@@ -30,6 +30,8 @@ export interface Publication {
   user_role: 'ligante' | 'professor';
   status: PublicationStatus;
   review_comment?: string;
+  reviewed_by_name?: string;
+  reviewed_by_role?: 'ligante' | 'professor';
 }
 
 export interface Profile {
@@ -44,6 +46,7 @@ export interface AdminAssignment {
   id: string;
   admin_email: string;
   assigned_user_email: string;
+  created_by_email?: string;
   created_at: string;
 }
 

@@ -158,6 +158,11 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Feedback do Admin</p>
                         <p className="text-xs text-slate-600 leading-relaxed italic">{pub.review_comment}</p>
+                        {pub.reviewed_by_name && (
+                          <p className="text-[8px] font-bold text-brand-600/60 uppercase tracking-widest mt-1">
+                            Revisado por: {pub.reviewed_by_name}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -272,7 +277,14 @@ export default function PublicationList({ publications, onDelete, searchTerm, se
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Feedback da Revisão</p>
                     <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
                       <MessageSquare className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-800 leading-relaxed italic">{viewingPub.review_comment}</p>
+                      <div className="space-y-1">
+                        <p className="text-xs text-amber-800 leading-relaxed italic">{viewingPub.review_comment}</p>
+                        {viewingPub.reviewed_by_name && (
+                          <p className="text-[9px] font-bold text-amber-600/60 uppercase tracking-widest">
+                            Revisado por: {viewingPub.reviewed_by_name} ({viewingPub.reviewed_by_role || 'professor'})
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

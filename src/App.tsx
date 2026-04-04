@@ -110,7 +110,12 @@ export default function App() {
     try {
       const { error } = await supabase
         .from('publications')
-        .update({ status, review_comment: comment })
+        .update({ 
+          status, 
+          review_comment: comment,
+          reviewed_by_name: session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0],
+          reviewed_by_role: session?.user?.user_metadata?.role || 'ligante'
+        })
         .eq('id', id);
 
       if (error) throw error;
@@ -331,6 +336,7 @@ export default function App() {
               onUpdateAssignments={fetchAssignments} 
               publications={publications}
               profiles={profiles}
+              currentAdminEmail={session?.user?.email || ''}
             />
           ) : (
             <>

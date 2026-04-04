@@ -10,9 +10,10 @@ interface PermissionsManagerProps {
   onUpdateAssignments: () => void;
   publications: Publication[];
   profiles: Profile[];
+  currentAdminEmail: string;
 }
 
-export default function PermissionsManager({ assignments, onUpdateAssignments, publications, profiles }: PermissionsManagerProps) {
+export default function PermissionsManager({ assignments, onUpdateAssignments, publications, profiles, currentAdminEmail }: PermissionsManagerProps) {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAssignedUserEmail, setNewAssignedUserEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,11 @@ export default function PermissionsManager({ assignments, onUpdateAssignments, p
     try {
       const { error } = await supabase
         .from('admin_assignments')
-        .insert([{ admin_email: newAdminEmail, assigned_user_email: newAssignedUserEmail }]);
+        .insert([{ 
+          admin_email: newAdminEmail, 
+          assigned_user_email: newAssignedUserEmail,
+          created_by_email: currentAdminEmail
+        }]);
       if (error) throw error;
       onUpdateAssignments();
       setNewAssignedUserEmail('');
@@ -218,6 +223,11 @@ export default function PermissionsManager({ assignments, onUpdateAssignments, p
                       <p className="text-[9px] text-slate-400 truncate">
                         {assignment.assigned_user_email}
                       </p>
+                      {assignment.created_by_email && (
+                        <p className="text-[8px] text-brand-600/60 font-bold uppercase tracking-widest mt-1">
+                          Atribuído por: {assignment.created_by_email}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <button 
