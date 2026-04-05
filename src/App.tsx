@@ -9,9 +9,8 @@ import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
 import Criteria from './components/Criteria';
 import ReviewArchive from './components/ReviewArchive';
-import PermissionsManager from './components/PermissionsManager';
 import ResourcesView from './components/ResourcesView';
-import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, ShieldCheck, Key, Globe } from 'lucide-react';
+import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, Key, Globe, ShieldCheck, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Session } from '@supabase/supabase-js';
 import { AcademicResource, UserResourceAccess } from './types';
@@ -22,21 +21,31 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [session, setSession] = useState<Session | null>(null);
-  const [view, setView] = useState<'dashboard' | 'admin' | 'archive' | 'permissions' | 'resources'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'admin' | 'archive' | 'resources'>('dashboard');
   const [assignments, setAssignments] = useState<AdminAssignment[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [resources, setResources] = useState<AcademicResource[]>([]);
   const [resourceAccess, setResourceAccess] = useState<UserResourceAccess[]>([]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session error:', error.message);
+        if (error.message.includes('Refresh Token Not Found') || error.message.includes('Invalid Refresh Token')) {
+          supabase.auth.signOut();
+        }
+      }
       setSession(session);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+      } else if (event === 'USER_UPDATED' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setSession(session);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -54,6 +63,12 @@ export default function App() {
   const isAdmin = session?.user?.email ? ADMIN_EMAILS.includes(session.user.email) : false;
   const isSuperAdmin = session?.user?.email ? SUPER_ADMIN_EMAILS.includes(session.user.email) : false;
   const currentUserProfile = profiles.find(p => p.email === session?.user?.email);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchAssignments();
+    }
+  }, [isAdmin]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -301,20 +316,6 @@ export default function App() {
               <Globe className="w-4 h-4" />
               Fontes de Pesquisa
             </button>
-
-            {isSuperAdmin && (
-              <button 
-                onClick={() => setView('permissions')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
-                  view === 'permissions' 
-                    ? 'bg-brand-900 text-white border-brand-900 shadow-lg shadow-brand-900/20' 
-                    : 'text-slate-400 border-transparent hover:text-brand-600 hover:bg-brand-50'
-                }`}
-              >
-                <Key className="w-4 h-4" />
-                Permissões
-              </button>
-            )}
           </div>
 
           <div className="pt-8 space-y-2">
@@ -370,7 +371,6 @@ export default function App() {
               <h2 className="text-4xl font-serif font-bold text-slate-900">
                 {view === 'admin' ? 'Painel Administrativo' : 
                  view === 'archive' ? 'Arquivo de Revisão' : 
-                 view === 'permissions' ? 'Gestão de Permissões' : 
                  view === 'resources' ? 'Fontes de Pesquisa' : 
                  `Bem-vindo, ${currentUserProfile?.role === 'professor' ? 'Professor' : 'Ligante'} ${currentUserProfile?.full_name || session?.user?.email?.split('@')[0]}`}
               </h2>
@@ -379,8 +379,6 @@ export default function App() {
                   ? 'Visão geral de todas as ações e registros do sistema.' 
                   : view === 'archive'
                   ? 'Consulte os trabalhos aprovados e rejeitados pela banca.'
-                  : view === 'permissions'
-                  ? 'Configure quais administradores podem revisar cada ligante.'
                   : view === 'resources'
                   ? 'Acesse repositórios e revistas acadêmicas para suas pesquisas.'
                   : 'Gerencie e organize as evidências científicas da LAPSI.'}
@@ -388,7 +386,7 @@ export default function App() {
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest bg-white px-4 py-2 rounded-full border border-slate-100 academic-shadow">
               <Info className="w-4 h-4 text-brand-500" />
-              <span>{view === 'admin' ? 'Controle Geral' : view === 'archive' ? 'Consulta Pública' : view === 'permissions' ? 'Segurança' : view === 'resources' ? 'Repositórios' : 'Visão Geral do Projeto'}</span>
+              <span>{view === 'admin' ? 'Controle Geral' : view === 'archive' ? 'Consulta Pública' : view === 'resources' ? 'Repositórios' : 'Visão Geral do Projeto'}</span>
             </div>
           </div>
 
@@ -404,14 +402,6 @@ export default function App() {
             />
           ) : view === 'archive' ? (
             <ReviewArchive publications={publications} />
-          ) : view === 'permissions' ? (
-            <PermissionsManager 
-              assignments={assignments} 
-              onUpdateAssignments={fetchAssignments} 
-              publications={publications}
-              profiles={profiles}
-              currentAdminEmail={session?.user?.email || ''}
-            />
           ) : view === 'resources' ? (
             <ResourcesView 
               resources={resources} 
@@ -426,7 +416,39 @@ export default function App() {
               profiles={profiles}
             />
           ) : (
-            <>
+            <div className="space-y-8">
+              {/* My Assigned Admin Banner (for students) */}
+              {!isAdmin && !isSuperAdmin && (
+                <div className="bg-gradient-to-r from-brand-900 to-brand-800 rounded-3xl p-8 text-white academic-shadow relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+                  <div className="relative z-10 flex items-start gap-6">
+                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
+                      <ShieldCheck className="w-6 h-6 text-brand-200" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold mb-2">Seu Docente Responsável</h3>
+                      {assignments.filter(a => a.assigned_user_email === session?.user?.email || a.assigned_user_name === session?.user?.email).length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                          {assignments.filter(a => a.assigned_user_email === session?.user?.email || a.assigned_user_name === session?.user?.email).map(assignment => {
+                            const adminProfile = profiles.find(p => p.email === (assignment.admin_email || assignment.admin_name));
+                            return (
+                              <div key={assignment.id} className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                                <User className="w-4 h-4 text-brand-200" />
+                                <span className="font-medium">{adminProfile?.full_name || assignment.admin_name || assignment.admin_email}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-brand-200 text-sm">
+                          Você ainda não foi vinculado a um docente responsável. Suas publicações serão avaliadas pela diretoria geral.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Instructions Banner for Ligantes */}
               {!isAdmin && !isSuperAdmin && (
                 <div className="bg-gradient-to-r from-indigo-500 to-brand-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -539,7 +561,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-            </>
+            </div>
           )}
         </main>
 

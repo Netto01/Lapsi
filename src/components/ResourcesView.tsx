@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AcademicResource, AdminAssignment, UserResourceAccess, Profile } from '../types';
+import { AcademicResource, UserResourceAccess, Profile, AdminAssignment } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, Plus, Trash2, ExternalLink, BookOpen, Database, Info, X, Check, Users, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';

@@ -15,6 +15,8 @@ export const ADMIN_EMAILS = [
   'Isadorasjm18@rede.ulbra.br',
   'julliaabreufacul02@rede.ulbra.br',
   'iuripereirapsi@rede.ulbra.br',
+  'analua.soares@pendente.ulbra.br',
+  'izabella.menezes@pendente.ulbra.br',
   'netoarlindo389@gmail.com'
 ];
 

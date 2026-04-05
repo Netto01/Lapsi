@@ -19,7 +19,7 @@ export default function AdminDashboard({
   publications, 
   onUpdateStatus, 
   isSuperAdmin, 
-  assignments, 
+  assignments,
   onUpdateAssignments,
   currentAdminEmail,
   currentAdminName
@@ -43,14 +43,7 @@ export default function AdminDashboard({
     }
   };
 
-  const visiblePublications = isSuperAdmin 
-    ? publications 
-    : publications.filter(pub => {
-        return assignments.some(a => 
-          ((a.admin_email && a.admin_email === currentAdminEmail) || (a.admin_name && a.admin_name === currentAdminName)) &&
-          ((a.assigned_user_email && a.assigned_user_email === pub.user_email) || (a.assigned_user_name && a.assigned_user_name === pub.user_name))
-        );
-      });
+  const visiblePublications = publications;
 
   const uniqueUsers = Array.from(new Set(visiblePublications.map(p => p.user_email))).map(email => {
     const pub = visiblePublications.find(p => p.user_email === email);
@@ -75,6 +68,11 @@ export default function AdminDashboard({
     { label: 'Aprovados', value: approved, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
+  // Filter assignments for this admin
+  const myStudents = assignments
+    .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
+    .map(a => a.assigned_user_email || a.assigned_user_name || '');
+
   return (
     <div className="space-y-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
@@ -95,6 +93,59 @@ export default function AdminDashboard({
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Meus Ligantes Section */}
+      <div className="bg-white rounded-[2.5rem] academic-shadow border border-slate-100 overflow-hidden">
+        <div className="p-8 border-b border-slate-50 bg-slate-50/50">
+          <h3 className="text-xl font-serif font-bold text-slate-900">Meus Ligantes</h3>
+          <p className="text-slate-500 text-sm mt-1">
+            Ligantes sob sua responsabilidade de orientação.
+          </p>
+        </div>
+        <div className="p-8">
+          {myStudents.length === 0 ? (
+            <div className="text-center py-8">
+              <User className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-500 font-medium">Nenhum ligante atribuído a você no momento.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {myStudents.map((student, idx) => {
+                const studentPubs = publications.filter(p => p.user_email === student || p.user_name === student);
+                const pendingPubs = studentPubs.filter(p => p.status === 'pending').length;
+                
+                return (
+                  <motion.div 
+                    key={student}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="flex flex-col p-4 rounded-2xl border border-slate-100 bg-slate-50"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-brand-600 font-bold text-xs">
+                        {student.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate" title={student}>{student}</p>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest">{studentPubs.length} Registros</p>
+                      </div>
+                    </div>
+                    {pendingPubs > 0 && (
+                      <div className="mt-auto pt-3 border-t border-slate-200/50">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-widest">
+                          <Clock className="w-3 h-3" />
+                          {pendingPubs} Aguardando Revisão
+                        </span>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-[2.5rem] academic-shadow border border-slate-100 overflow-hidden">

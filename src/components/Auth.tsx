@@ -5,13 +5,10 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'ligante' | 'professor'>('ligante');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -20,26 +17,11 @@ export default function Auth() {
     setMessage(null);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              role: role,
-            },
-          },
-        });
-        if (error) throw error;
-        setMessage({ type: 'success', text: 'Cadastro realizado! Verifique seu e-mail para confirmar (se necessário) ou faça login.' });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Erro na autenticação.' });
     } finally {
@@ -85,13 +67,11 @@ export default function Auth() {
             />
           </div>
           <h1 className="text-3xl font-serif font-bold mb-3">
-            {isResettingPassword ? 'Recuperar Senha' : isSignUp ? 'Criar Conta' : 'Acesso LAPSI'}
+            {isResettingPassword ? 'Recuperar Senha' : 'Acesso LAPSI'}
           </h1>
           <p className="text-brand-200 text-sm leading-relaxed">
             {isResettingPassword
               ? 'Enviaremos um link para você redefinir sua senha.'
-              : isSignUp 
-              ? 'Junte-se à Liga Acadêmica de Psicologia e Saúde Mental.' 
               : 'Entre com suas credenciais para acessar o sistema.'}
           </p>
         </div>
@@ -99,55 +79,7 @@ export default function Auth() {
         <div className="p-10">
           <form onSubmit={isResettingPassword ? handleResetPassword : handleAuth} className="space-y-6">
             <AnimatePresence mode="wait">
-              {!isResettingPassword && isSignUp && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-2 overflow-hidden"
-                >
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Nome Completo</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                    <input
-                      required={isSignUp}
-                      type="text"
-                      placeholder="Seu Nome"
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-slate-900"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2 pt-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Eu sou:</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setRole('ligante')}
-                        className={`py-3 px-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
-                          role === 'ligante' 
-                            ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-sm' 
-                            : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
-                        }`}
-                      >
-                        Ligante
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRole('professor')}
-                        className={`py-3 px-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
-                          role === 'professor' 
-                            ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-sm' 
-                            : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
-                        }`}
-                      >
-                        Professor
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+              {/* Removed sign up fields */}
             </AnimatePresence>
 
             <div className="space-y-2">
@@ -175,18 +107,16 @@ export default function Auth() {
                 >
                   <div className="flex items-center justify-between px-1">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Senha</label>
-                    {!isSignUp && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsResettingPassword(true);
-                          setMessage(null);
-                        }}
-                        className="text-[10px] font-bold text-brand-600 hover:text-brand-700 uppercase tracking-widest"
-                      >
-                        Esqueceu a senha?
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsResettingPassword(true);
+                        setMessage(null);
+                      }}
+                      className="text-[10px] font-bold text-brand-600 hover:text-brand-700 uppercase tracking-widest"
+                    >
+                      Esqueceu a senha?
+                    </button>
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
@@ -223,8 +153,8 @@ export default function Auth() {
               disabled={loading}
               className="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/20 flex items-center justify-center gap-3 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isResettingPassword ? <KeyRound className="w-4 h-4" /> : isSignUp ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
-              {isResettingPassword ? 'Enviar Link' : isSignUp ? 'Criar Conta' : 'Entrar'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isResettingPassword ? <KeyRound className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
+              {isResettingPassword ? 'Enviar Link' : 'Entrar'}
             </button>
           </form>
 
@@ -240,15 +170,9 @@ export default function Auth() {
                 Voltar para o Login
               </button>
             ) : (
-              <button 
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setMessage(null);
-                }}
-                className="text-xs font-bold text-brand-600 uppercase tracking-widest hover:underline"
-              >
-                {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Cadastre-se'}
-              </button>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Acesso restrito aos membros da liga.
+              </p>
             )}
           </div>
           
