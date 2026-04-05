@@ -11,6 +11,7 @@ interface ResourcesViewProps {
   onUpdate: () => void;
   assignments: AdminAssignment[];
   currentAdminEmail: string;
+  currentAdminName?: string;
   resourceAccess: UserResourceAccess[];
   onUpdateAccess: () => void;
   profiles: Profile[];
@@ -23,6 +24,7 @@ export default function ResourcesView({
   onUpdate,
   assignments,
   currentAdminEmail,
+  currentAdminName,
   resourceAccess,
   onUpdateAccess,
   profiles
@@ -41,14 +43,14 @@ export default function ResourcesView({
   const professors = profiles.filter(p => p.role === 'professor');
 
   const getAdminForStudent = (email: string) => {
-    return assignments.find(a => a.assigned_user_email === email)?.admin_email;
+    return assignments.find(a => a.assigned_user_email === email || a.assigned_user_name === email)?.admin_email;
   };
 
   const myAdminEmail = getAdminForStudent(currentAdminEmail);
 
   const myAssignedStudents = assignments
-    .filter(a => a.admin_email === currentAdminEmail)
-    .map(a => a.assigned_user_email);
+    .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
+    .map(a => a.assigned_user_email || a.assigned_user_name || '');
 
   // Filter resources for students: show if they have direct access OR if their admin has access
   const visibleResources = (isAdmin || isSuperAdmin) 
@@ -56,7 +58,8 @@ export default function ResourcesView({
     : resources.filter(res => 
         resourceAccess.some(acc => 
           acc.resource_id === res.id && 
-          (acc.user_email === currentAdminEmail || acc.user_email === myAdminEmail)
+          ((acc.user_email && (acc.user_email === currentAdminEmail || acc.user_email === myAdminEmail)) ||
+           (acc.user_name && (acc.user_name === currentAdminName || acc.user_name === myAdminEmail)))
         )
       );
 
@@ -76,11 +79,15 @@ export default function ResourcesView({
 
       // If professors were selected, grant them access
       if (selectedStudents.length > 0 && resData) {
-        const accessRecords = selectedStudents.map(email => ({
-          resource_id: resData.id,
-          user_email: email,
-          granted_by_email: currentAdminEmail
-        }));
+        const accessRecords = selectedStudents.map(identifier => {
+          const isEmail = identifier.includes('@');
+          return {
+            resource_id: resData.id,
+            user_email: isEmail ? identifier : null,
+            user_name: !isEmail ? identifier : null,
+            granted_by_email: currentAdminEmail
+          };
+        });
 
         const { error: accessError } = await supabase
           .from('user_resource_access')
@@ -125,8 +132,12 @@ export default function ResourcesView({
     }
   };
 
-  const toggleAccess = async (resourceId: string, userEmail: string) => {
-    const existing = resourceAccess.find(a => a.resource_id === resourceId && a.user_email === userEmail);
+  const toggleAccess = async (resourceId: string, userIdentifier: string) => {
+    const isEmail = userIdentifier.includes('@');
+    const existing = resourceAccess.find(a => 
+      a.resource_id === resourceId && 
+      ((isEmail && a.user_email === userIdentifier) || (!isEmail && a.user_name === userIdentifier))
+    );
     
     try {
       if (existing) {
@@ -140,7 +151,8 @@ export default function ResourcesView({
           .from('user_resource_access')
           .insert([{
             resource_id: resourceId,
-            user_email: userEmail,
+            user_email: isEmail ? userIdentifier : null,
+            user_name: !isEmail ? userIdentifier : null,
             granted_by_email: currentAdminEmail
           }]);
         if (error) throw error;
@@ -355,18 +367,22 @@ export default function ResourcesView({
                     <Shield className="w-3 h-3" /> Liberar para seus ligantes:
                   </p>
                   <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                    {myAssignedStudents.map(email => {
-                      const access = resourceAccess.find(a => a.resource_id === resource.id && a.user_email === email);
+                    {myAssignedStudents.map(identifier => {
+                      const isEmail = identifier.includes('@');
+                      const access = resourceAccess.find(a => 
+                        a.resource_id === resource.id && 
+                        ((isEmail && a.user_email === identifier) || (!isEmail && a.user_name === identifier))
+                      );
                       const hasAccess = !!access;
                       return (
-                        <div key={email} className="space-y-1">
+                        <div key={identifier} className="space-y-1">
                           <button
-                            onClick={() => toggleAccess(resource.id, email)}
+                            onClick={() => toggleAccess(resource.id, identifier)}
                             className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all ${
                               hasAccess ? 'bg-brand-50 text-brand-700' : 'hover:bg-slate-50 text-slate-500'
                             }`}
                           >
-                            <span className="text-[10px] font-medium truncate">{email}</span>
+                            <span className="text-[10px] font-medium truncate">{identifier}</span>
                             {hasAccess ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
                           </button>
                           {hasAccess && access.granted_by_email && (

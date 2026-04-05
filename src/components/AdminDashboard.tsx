@@ -12,6 +12,7 @@ interface AdminDashboardProps {
   assignments: AdminAssignment[];
   onUpdateAssignments: () => void;
   currentAdminEmail: string;
+  currentAdminName?: string;
 }
 
 export default function AdminDashboard({ 
@@ -20,7 +21,8 @@ export default function AdminDashboard({
   isSuperAdmin, 
   assignments, 
   onUpdateAssignments,
-  currentAdminEmail
+  currentAdminEmail,
+  currentAdminName
 }: AdminDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | 'all'>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
@@ -41,13 +43,14 @@ export default function AdminDashboard({
     }
   };
 
-  const assignedUserEmails = assignments
-    .filter(a => a.admin_email === currentAdminEmail)
-    .map(a => a.assigned_user_email);
-
   const visiblePublications = isSuperAdmin 
     ? publications 
-    : publications.filter(p => assignedUserEmails.includes(p.user_email));
+    : publications.filter(pub => {
+        return assignments.some(a => 
+          ((a.admin_email && a.admin_email === currentAdminEmail) || (a.admin_name && a.admin_name === currentAdminName)) &&
+          ((a.assigned_user_email && a.assigned_user_email === pub.user_email) || (a.assigned_user_name && a.assigned_user_name === pub.user_name))
+        );
+      });
 
   const uniqueUsers = Array.from(new Set(visiblePublications.map(p => p.user_email))).map(email => {
     const pub = visiblePublications.find(p => p.user_email === email);

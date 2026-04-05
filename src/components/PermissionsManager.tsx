@@ -14,8 +14,8 @@ interface PermissionsManagerProps {
 }
 
 export default function PermissionsManager({ assignments, onUpdateAssignments, publications, profiles, currentAdminEmail }: PermissionsManagerProps) {
-  const [newAdminEmail, setNewAdminEmail] = useState('');
-  const [newAssignedUserEmail, setNewAssignedUserEmail] = useState('');
+  const [newAdminInput, setNewAdminInput] = useState('');
+  const [newUserInput, setNewUserInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [userSearch, setUserSearch] = useState('');
 
@@ -41,19 +41,25 @@ export default function PermissionsManager({ assignments, onUpdateAssignments, p
   );
 
   const handleAddAssignment = async () => {
-    if (!newAdminEmail || !newAssignedUserEmail) return;
+    if (!newAdminInput || !newUserInput) return;
     setLoading(true);
+    
+    const adminIsEmail = newAdminInput.includes('@');
+    const userIsEmail = newUserInput.includes('@');
+
     try {
       const { error } = await supabase
         .from('admin_assignments')
         .insert([{ 
-          admin_email: newAdminEmail, 
-          assigned_user_email: newAssignedUserEmail,
+          admin_email: adminIsEmail ? newAdminInput : null,
+          admin_name: !adminIsEmail ? newAdminInput : null,
+          assigned_user_email: userIsEmail ? newUserInput : null,
+          assigned_user_name: !userIsEmail ? newUserInput : null,
           created_by_email: currentAdminEmail
         }]);
       if (error) throw error;
       onUpdateAssignments();
-      setNewAssignedUserEmail('');
+      setNewUserInput('');
       setUserSearch('');
     } catch (error) {
       console.error('Error adding assignment:', error);
@@ -100,32 +106,34 @@ export default function PermissionsManager({ assignments, onUpdateAssignments, p
             
             <div className="space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Administrador Responsável</label>
-                <select 
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Administrador Responsável (E-mail ou Nome)</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: caio.brum@ulbra.br ou Caio César Brum"
                   className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
-                  value={newAdminEmail}
-                  onChange={(e) => setNewAdminEmail(e.target.value)}
-                >
-                  <option value="">Selecionar Administrador</option>
+                  value={newAdminInput}
+                  onChange={(e) => setNewAdminInput(e.target.value)}
+                  list="admins-list"
+                />
+                <datalist id="admins-list">
                   {ADMIN_EMAILS.map(email => (
-                    <option key={email} value={email}>{email}</option>
+                    <option key={email} value={email} />
                   ))}
-                </select>
+                </datalist>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">E-mail do Ligante</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Ligante (E-mail ou Nome)</label>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input 
                     type="text"
-                    placeholder="Buscar ligante por nome ou e-mail..."
+                    placeholder="Buscar ou digitar nome/e-mail..."
                     className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
                     value={userSearch}
                     onChange={(e) => {
                       setUserSearch(e.target.value);
-                      // If user clears search, clear selection too if it's not in the list
-                      if (!e.target.value) setNewAssignedUserEmail('');
+                      setNewUserInput(e.target.value);
                     }}
                   />
                 </div>
@@ -136,11 +144,11 @@ export default function PermissionsManager({ assignments, onUpdateAssignments, p
                     <button
                       key={profile.id}
                       onClick={() => {
-                        setNewAssignedUserEmail(profile.email);
+                        setNewUserInput(profile.email);
                         setUserSearch(profile.full_name);
                       }}
                       className={`w-full flex items-center justify-between p-3 text-left hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 ${
-                        newAssignedUserEmail === profile.email ? 'bg-brand-50/50' : ''
+                        newUserInput === profile.email ? 'bg-brand-50/50' : ''
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -152,12 +160,12 @@ export default function PermissionsManager({ assignments, onUpdateAssignments, p
                           <p className="text-[9px] text-slate-400">{profile.email}</p>
                         </div>
                       </div>
-                      {newAssignedUserEmail === profile.email && <Check className="w-4 h-4 text-brand-600" />}
+                      {newUserInput === profile.email && <Check className="w-4 h-4 text-brand-600" />}
                     </button>
                   ))}
-                  {filteredProfiles.length === 0 && (
+                  {filteredProfiles.length === 0 && userSearch.length > 0 && (
                     <div className="p-4 text-center">
-                      <p className="text-[10px] text-slate-400 italic">Nenhum usuário encontrado.</p>
+                      <p className="text-[10px] text-slate-400 italic">Usando "{userSearch}" como nome/e-mail.</p>
                     </div>
                   )}
                 </div>
@@ -165,7 +173,7 @@ export default function PermissionsManager({ assignments, onUpdateAssignments, p
 
               <button 
                 onClick={handleAddAssignment}
-                disabled={loading || !newAdminEmail || !newAssignedUserEmail}
+                disabled={loading || !newAdminInput || !newUserInput}
                 className="w-full py-4 bg-brand-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-brand-950 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Processando...' : 'Confirmar Atribuição'}

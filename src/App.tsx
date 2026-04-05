@@ -400,6 +400,7 @@ export default function App() {
               assignments={assignments}
               onUpdateAssignments={fetchAssignments}
               currentAdminEmail={session?.user?.email || ''}
+              currentAdminName={currentUserProfile?.full_name || session?.user?.user_metadata?.full_name || ''}
             />
           ) : view === 'archive' ? (
             <ReviewArchive publications={publications} />
@@ -419,6 +420,7 @@ export default function App() {
               onUpdate={fetchResources}
               assignments={assignments}
               currentAdminEmail={session?.user?.email || ''}
+              currentAdminName={currentUserProfile?.full_name || session?.user?.user_metadata?.full_name || ''}
               resourceAccess={resourceAccess}
               onUpdateAccess={fetchResourceAccess}
               profiles={profiles}
@@ -452,7 +454,7 @@ export default function App() {
               )}
 
               {/* Academic Resources for Students */}
-              {!isAdmin && !isSuperAdmin && resources.filter(res => resourceAccess.some(acc => acc.resource_id === res.id && acc.user_email === session?.user?.email)).length > 0 && (
+              {!isAdmin && !isSuperAdmin && resources.filter(res => resourceAccess.some(acc => acc.resource_id === res.id && ((acc.user_email && acc.user_email === session?.user?.email) || (acc.user_name && acc.user_name === (currentUserProfile?.full_name || session?.user?.user_metadata?.full_name))))).length > 0 && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-serif font-bold text-slate-900">Fontes de Pesquisa</h3>
@@ -460,7 +462,7 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {resources
-                      .filter(res => resourceAccess.some(acc => acc.resource_id === res.id && acc.user_email === session?.user?.email))
+                      .filter(res => resourceAccess.some(acc => acc.resource_id === res.id && ((acc.user_email && acc.user_email === session?.user?.email) || (acc.user_name && acc.user_name === (currentUserProfile?.full_name || session?.user?.user_metadata?.full_name)))))
                       .map((resource) => (
                         <div key={resource.id} className="bg-white rounded-[2rem] academic-shadow border border-slate-100 p-6 flex flex-col group hover:border-indigo-200 transition-all">
                           <div className="flex justify-between items-start mb-4">

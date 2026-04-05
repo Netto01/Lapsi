@@ -46,8 +46,10 @@ export interface Profile {
 
 export interface AdminAssignment {
   id: string;
-  admin_email: string;
-  assigned_user_email: string;
+  admin_email?: string;
+  admin_name?: string;
+  assigned_user_email?: string;
+  assigned_user_name?: string;
   created_by_email?: string;
   created_at: string;
 }
@@ -65,7 +67,8 @@ export interface AcademicResource {
 export interface UserResourceAccess {
   id: string;
   resource_id: string;
-  user_email: string;
+  user_email?: string;
+  user_name?: string;
   granted_by_email: string;
   created_at: string;
 }
