@@ -45,7 +45,11 @@ export default function AdminDashboard({
     }
   };
 
-  const visiblePublications = publications;
+  const myStudents = assignments
+    .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
+    .map(a => a.assigned_user_email || a.assigned_user_name || '');
+
+  const visiblePublications = publications.filter(p => myStudents.includes(p.user_email) || myStudents.includes(p.user_name));
 
   const uniqueUsers = Array.from(new Set(visiblePublications.map(p => p.user_email))).map(email => {
     const pub = visiblePublications.find(p => p.user_email === email);
@@ -69,11 +73,6 @@ export default function AdminDashboard({
     { label: 'Aguardando Revisão', value: pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Aprovados', value: approved, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
-
-  // Filter assignments for this admin
-  const myStudents = assignments
-    .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
-    .map(a => a.assigned_user_email || a.assigned_user_name || '');
 
   return (
     <div className="space-y-12">

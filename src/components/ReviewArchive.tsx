@@ -7,14 +7,18 @@ interface ReviewArchiveProps {
   publications: Publication[];
 }
 
-export default function ReviewArchive({ publications }: ReviewArchiveProps) {
+export default function ReviewArchive({ 
+  publications, 
+}: ReviewArchiveProps) {
   const [activeTab, setActiveTab] = useState<'approved' | 'rejected'>('approved');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewingPubId, setViewingPubId] = useState<string | null>(null);
 
-  const viewingPub = publications.find(p => p.id === viewingPubId);
+  const visiblePublications = publications;
 
-  const filtered = publications.filter(p => 
+  const viewingPub = visiblePublications.find(p => p.id === viewingPubId);
+
+  const filtered = visiblePublications.filter(p => 
     p.status === activeTab &&
     (p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
      p.authors.toLowerCase().includes(searchTerm.toLowerCase()))
