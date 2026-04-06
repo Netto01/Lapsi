@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, isConfigured } from './lib/supabase';
-import { Publication, AdminAssignment, Profile } from './types';
+import { Publication, AdminAssignment, Profile, AcademicResource, UserResourceAccess } from './types';
 import { ADMIN_EMAILS, SUPER_ADMIN_EMAILS } from './constants';
 import PublicationForm from './components/PublicationForm';
 import PublicationList from './components/PublicationList';
@@ -14,7 +14,6 @@ import ManagementView from './components/ManagementView';
 import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, Key, Globe, ShieldCheck, User, ClipboardList, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Session } from '@supabase/supabase-js';
-import { AcademicResource, UserResourceAccess } from './types';
 
 export default function App() {
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -431,6 +430,8 @@ export default function App() {
               currentAdminEmail={session?.user?.email || ''}
               currentAdminName={currentUserProfile?.full_name || session?.user?.user_metadata?.full_name || ''}
               profiles={profiles}
+              resources={resources}
+              resourceAccess={resourceAccess}
             />
           ) : view === 'archive' ? (
             <ReviewArchive publications={publications} />

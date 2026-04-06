@@ -48,19 +48,21 @@ export default function ResourcesView({
 
   const myAdminEmail = getAdminForStudent(currentAdminEmail);
 
-  const myAssignedStudents = assignments
+  const myStudents = assignments
     .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
     .map(a => a.assigned_user_email || a.assigned_user_name || '');
 
-  // Filter resources: only Super Admin sees everything. Others see what they created or have direct access to.
+  // Filter resources: only Super Admin sees everything. 
+  // Professors see what they created, have access to, or their students have access to.
   const visibleResources = isSuperAdmin 
     ? resources 
     : resources.filter(res => 
         res.created_by_email === currentAdminEmail ||
         resourceAccess.some(acc => 
-          acc.resource_id === res.id && 
-          ((acc.user_email && acc.user_email === currentAdminEmail) ||
-           (acc.user_name && acc.user_name === currentAdminName))
+          acc.resource_id === res.id && (
+            (acc.user_email && (acc.user_email === currentAdminEmail || myStudents.includes(acc.user_email))) ||
+            (acc.user_name && (acc.user_name === currentAdminName || myStudents.includes(acc.user_name)))
+          )
         )
       );
 
@@ -368,7 +370,7 @@ export default function ResourcesView({
                     <Shield className="w-3 h-3" /> Liberar para seus ligantes:
                   </p>
                   <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                    {myAssignedStudents.map(identifier => {
+                    {myStudents.map(identifier => {
                       const isEmail = identifier.includes('@');
                       const access = resourceAccess.find(a => 
                         a.resource_id === resource.id && 
@@ -394,7 +396,7 @@ export default function ResourcesView({
                         </div>
                       );
                     })}
-                    {myAssignedStudents.length === 0 && (
+                    {myStudents.length === 0 && (
                       <p className="text-[10px] text-slate-400 italic py-2">Você não possui ligantes atribuídos.</p>
                     )}
                   </div>

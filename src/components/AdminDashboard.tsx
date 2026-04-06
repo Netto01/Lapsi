@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Publication, PublicationStatus, AdminAssignment, Profile } from '../types';
+import { Publication, PublicationStatus, AdminAssignment, Profile, AcademicResource, UserResourceAccess } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink, ShieldCheck, Users } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink, ShieldCheck, Users, BookOpen, Database, Globe } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ADMIN_EMAILS } from '../constants';
 
@@ -14,6 +14,8 @@ interface AdminDashboardProps {
   currentAdminEmail: string;
   currentAdminName?: string;
   profiles: Profile[];
+  resources: AcademicResource[];
+  resourceAccess: UserResourceAccess[];
 }
 
 export default function AdminDashboard({ 
@@ -24,7 +26,9 @@ export default function AdminDashboard({
   onUpdateAssignments,
   currentAdminEmail,
   currentAdminName,
-  profiles
+  profiles,
+  resources,
+  resourceAccess
 }: AdminDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | 'all'>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
@@ -50,6 +54,18 @@ export default function AdminDashboard({
     .map(a => a.assigned_user_email || a.assigned_user_name || '');
 
   const visiblePublications = publications.filter(p => myStudents.includes(p.user_email) || myStudents.includes(p.user_name));
+
+  const visibleResources = isSuperAdmin 
+    ? resources 
+    : resources.filter(res => 
+        res.created_by_email === currentAdminEmail ||
+        resourceAccess.some(acc => 
+          acc.resource_id === res.id && (
+            (acc.user_email && (acc.user_email === currentAdminEmail || myStudents.includes(acc.user_email))) ||
+            (acc.user_name && (acc.user_name === currentAdminName || myStudents.includes(acc.user_name)))
+          )
+        )
+      );
 
   const uniqueUsers = Array.from(new Set(visiblePublications.map(p => p.user_email))).map(email => {
     const pub = visiblePublications.find(p => p.user_email === email);
@@ -321,6 +337,53 @@ export default function AdminDashboard({
           </div>
         )}
       </div>
+
+      {/* Academic Resources Section for Admins */}
+      {visibleResources.length > 0 && (
+        <div className="space-y-6 pt-10 border-t border-slate-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xl font-serif font-bold text-slate-900">Fontes de Pesquisa</h3>
+                <p className="text-xs text-slate-500 font-medium">Repositórios acadêmicos vinculados ao seu grupo</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {visibleResources.map((resource) => (
+              <div key={resource.id} className="group bg-white rounded-[2rem] p-6 border border-slate-100 academic-shadow hover:border-indigo-100 transition-all">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
+                      {resource.category === 'Repositório' ? <Database className="w-5 h-5" /> : <Globe className="w-5 h-5" />}
+                    </div>
+                    <a href={resource.url} target="_blank" rel="noopener noreferrer" className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                  <div className="flex-1 space-y-1 ml-3">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{resource.category}</span>
+                    <h4 className="text-sm font-bold text-slate-900 line-clamp-1">{resource.title}</h4>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">{resource.description}</p>
+                <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acesso Autorizado</span>
+                  <div className="flex -space-x-2">
+                    <div className="w-6 h-6 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[8px] font-bold text-indigo-600">
+                      {resource.created_by_email?.substring(0, 1).toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Review Modal */}
       <AnimatePresence>
