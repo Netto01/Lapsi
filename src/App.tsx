@@ -468,8 +468,8 @@ export default function App() {
                 <Stats publications={userPublications} />
               </div>
 
-              {/* My Assigned Admin Banner (for students) */}
-              {!isAdmin && !isSuperAdmin && (
+              {/* Orientation Banner (for anyone assigned to an admin) */}
+              {assignments.some(a => a.assigned_user_email === session?.user?.email || a.assigned_user_name === session?.user?.email) && (
                 <div className="bg-gradient-to-r from-brand-900 to-brand-800 rounded-[2.5rem] p-8 text-white academic-shadow relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
                   <div className="relative z-10 flex items-start gap-6">
@@ -478,30 +478,24 @@ export default function App() {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold mb-2">Seu Docente Responsável</h3>
-                      {assignments.filter(a => a.assigned_user_email === session?.user?.email || a.assigned_user_name === session?.user?.email).length > 0 ? (
-                        <div className="flex flex-wrap gap-3">
-                          {assignments.filter(a => a.assigned_user_email === session?.user?.email || a.assigned_user_name === session?.user?.email).map(assignment => {
-                            const adminProfile = profiles.find(p => p.email === (assignment.admin_email || assignment.admin_name));
-                            return (
-                              <div key={assignment.id} className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/10">
-                                <User className="w-4 h-4 text-brand-200" />
-                                <span className="font-medium">{adminProfile?.full_name || assignment.admin_name || assignment.admin_email}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-brand-200 text-sm">
-                          Você ainda não foi vinculado a um docente responsável. Suas publicações serão avaliadas pela diretoria geral.
-                        </p>
-                      )}
+                      <div className="flex flex-wrap gap-3">
+                        {assignments.filter(a => a.assigned_user_email === session?.user?.email || a.assigned_user_name === session?.user?.email).map(assignment => {
+                          const adminProfile = profiles.find(p => p.email === (assignment.admin_email || assignment.admin_name));
+                          return (
+                            <div key={assignment.id} className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                              <User className="w-4 h-4 text-brand-200" />
+                              <span className="font-medium">{adminProfile?.full_name || assignment.admin_name || assignment.admin_email}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Instructions Banner for Ligantes */}
-              {!isAdmin && !isSuperAdmin && (
+              {/* Instructions Banner for anyone under orientation */}
+              {assignments.some(a => a.assigned_user_email === session?.user?.email || a.assigned_user_name === session?.user?.email) && (
                 <div className="bg-gradient-to-r from-indigo-500 to-brand-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -526,8 +520,8 @@ export default function App() {
                 </div>
               )}
 
-              {/* Academic Resources for Students */}
-              {!isAdmin && !isSuperAdmin && resources.filter(res => resourceAccess.some(acc => acc.resource_id === res.id && ((acc.user_email && acc.user_email === session?.user?.email) || (acc.user_name && acc.user_name === (currentUserProfile?.full_name || session?.user?.user_metadata?.full_name))))).length > 0 && (
+              {/* Academic Resources for anyone with access */}
+              {resources.filter(res => resourceAccess.some(acc => acc.resource_id === res.id && ((acc.user_email && acc.user_email === session?.user?.email) || (acc.user_name && acc.user_name === (currentUserProfile?.full_name || session?.user?.user_metadata?.full_name))))).length > 0 && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-serif font-bold text-slate-900">Fontes de Pesquisa</h3>

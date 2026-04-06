@@ -15,14 +15,14 @@ export const ADMIN_EMAILS = [
   'Isadorasjm18@rede.ulbra.br',
   'julliaabreufacul02@rede.ulbra.br',
   'iuripereirapsi@rede.ulbra.br',
-  'analua.soares@pendente.ulbra.br',
-  'izabella.menezes@pendente.ulbra.br',
-  'netoarlindo389@gmail.com'
+  'netoarlindo389@gmail.com',
+  'lapsiulbra@gmail.com'
 ];
 
 export const SUPER_ADMIN_EMAILS = [
-  'netoarlindo389@gmail.com',
   'gabrielmasc@rede.ulbra.br',
   'alinne.aires@rede.ulbra.br',
-  'lapsiulbra@gmail.com'
+  'netoarlindo389@gmail.com',
+  'lapsiulbra@gmail.com',
+   'mayelle.batista@ulbra.br'
 ];

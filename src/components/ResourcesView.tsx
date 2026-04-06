@@ -52,14 +52,15 @@ export default function ResourcesView({
     .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
     .map(a => a.assigned_user_email || a.assigned_user_name || '');
 
-  // Filter resources for students: show if they have direct access OR if their admin has access
-  const visibleResources = (isAdmin || isSuperAdmin) 
+  // Filter resources: only Super Admin sees everything. Others see what they created or have direct access to.
+  const visibleResources = isSuperAdmin 
     ? resources 
     : resources.filter(res => 
+        res.created_by_email === currentAdminEmail ||
         resourceAccess.some(acc => 
           acc.resource_id === res.id && 
-          ((acc.user_email && (acc.user_email === currentAdminEmail || acc.user_email === myAdminEmail)) ||
-           (acc.user_name && (acc.user_name === currentAdminName || acc.user_name === myAdminEmail)))
+          ((acc.user_email && acc.user_email === currentAdminEmail) ||
+           (acc.user_name && acc.user_name === currentAdminName))
         )
       );
 
