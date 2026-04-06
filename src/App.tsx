@@ -43,6 +43,7 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         setSession(null);
+        setView('dashboard');
       } else if (event === 'USER_UPDATED' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setSession(session);
       }
@@ -65,12 +66,6 @@ export default function App() {
   const currentUserProfile = profiles.find(p => p.email === session?.user?.email);
 
   const userPublications = publications.filter(p => p.user_email === session?.user?.email);
-
-  useEffect(() => {
-    if (session && isAdmin && view === 'dashboard') {
-      setView('admin');
-    }
-  }, [session, isAdmin]);
 
   useEffect(() => {
     if (isAdmin) {
