@@ -60,7 +60,7 @@ export default function Auth() {
         <div className="bg-brand-900 p-10 text-white text-center">
           <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 overflow-hidden bg-white shadow-sm">
             <img 
-              src="https://i.ibb.co/6cf1bcfN/Whats-App-Image-2026-04-03-at-15-53-27-photoaidcom-cropped-removebg-preview.png" 
+              src="https://yafmivbcakhcxyimmkvs.supabase.co/storage/v1/object/public/logo/logo.png" 
               alt="LAPSI Logo" 
               className="w-full h-full object-contain p-1"
               referrerPolicy="no-referrer"

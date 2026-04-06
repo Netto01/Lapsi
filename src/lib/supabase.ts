@@ -12,4 +12,9 @@ export const supabase = createClient(
   supabaseAnonKey || 'placeholder-key'
 );
 
+// Expose supabase to window for debugging and manual scripts
+if (typeof window !== 'undefined') {
+  (window as any).supabase = supabase;
+}
+
 export { isConfigured };

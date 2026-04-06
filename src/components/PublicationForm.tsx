@@ -69,11 +69,7 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
   const labelClasses = "flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-2";
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="bg-white rounded-3xl academic-shadow border border-slate-100 overflow-hidden"
-    >
+    <div className="bg-white rounded-3xl academic-shadow border border-slate-100 overflow-hidden">
       <div className="bg-brand-900 p-8 text-white flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-serif font-bold">Nova Publicação</h2>
@@ -260,6 +256,6 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
           </button>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Publication, PublicationStatus, AdminAssignment } from '../types';
+import { Publication, PublicationStatus, AdminAssignment, Profile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink, ShieldCheck, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ADMIN_EMAILS } from '../constants';
 
@@ -13,6 +13,7 @@ interface AdminDashboardProps {
   onUpdateAssignments: () => void;
   currentAdminEmail: string;
   currentAdminName?: string;
+  profiles: Profile[];
 }
 
 export default function AdminDashboard({ 
@@ -22,7 +23,8 @@ export default function AdminDashboard({
   assignments,
   onUpdateAssignments,
   currentAdminEmail,
-  currentAdminName
+  currentAdminName,
+  profiles
 }: AdminDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | 'all'>('all');
   const [userFilter, setUserFilter] = useState<string>('all');

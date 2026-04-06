@@ -10,7 +10,8 @@ import AdminDashboard from './components/AdminDashboard';
 import Criteria from './components/Criteria';
 import ReviewArchive from './components/ReviewArchive';
 import ResourcesView from './components/ResourcesView';
-import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, Key, Globe, ShieldCheck, User } from 'lucide-react';
+import ManagementView from './components/ManagementView';
+import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, Key, Globe, ShieldCheck, User, ClipboardList, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Session } from '@supabase/supabase-js';
 import { AcademicResource, UserResourceAccess } from './types';
@@ -21,7 +22,7 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [session, setSession] = useState<Session | null>(null);
-  const [view, setView] = useState<'dashboard' | 'admin' | 'archive' | 'resources'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'admin' | 'archive' | 'resources' | 'management'>('dashboard');
   const [assignments, setAssignments] = useState<AdminAssignment[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [resources, setResources] = useState<AcademicResource[]>([]);
@@ -64,11 +65,13 @@ export default function App() {
   const isSuperAdmin = session?.user?.email ? SUPER_ADMIN_EMAILS.includes(session.user.email) : false;
   const currentUserProfile = profiles.find(p => p.email === session?.user?.email);
 
+  const userPublications = publications.filter(p => p.user_email === session?.user?.email);
+
   useEffect(() => {
-    if (isAdmin) {
-      fetchAssignments();
+    if (session && isAdmin && view === 'dashboard') {
+      setView('admin');
     }
-  }, [isAdmin]);
+  }, [session, isAdmin]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -161,6 +164,17 @@ export default function App() {
     }
   }
 
+  useEffect(() => {
+    if (showForm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showForm]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -250,7 +264,7 @@ export default function App() {
         <div className="p-8 flex flex-col items-center text-center border-b border-slate-50">
           <div className="w-24 h-24 rounded-3xl flex items-center justify-center overflow-hidden bg-white shadow-md border border-slate-100 mb-4 group transition-transform hover:scale-105">
             <img 
-              src="https://i.ibb.co/6cf1bcfN/Whats-App-Image-2026-04-03-at-15-53-27-photoaidcom-cropped-removebg-preview.png" 
+              src="https://yafmivbcakhcxyimmkvs.supabase.co/storage/v1/object/public/logo/logo.png" 
               alt="LAPSI Logo" 
               className="w-full h-full object-contain p-1"
               referrerPolicy="no-referrer"
@@ -290,6 +304,20 @@ export default function App() {
               >
                 <ShieldCheck className="w-4 h-4" />
                 Painel Admin
+              </button>
+            )}
+
+            {isSuperAdmin && (
+              <button 
+                onClick={() => setView('management')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
+                  view === 'management' 
+                    ? 'bg-violet-50 text-violet-700 border-violet-100' 
+                    : 'text-slate-400 border-transparent hover:text-violet-600 hover:bg-violet-50'
+                }`}
+              >
+                <ClipboardList className="w-4 h-4" />
+                Gestão Acadêmica
               </button>
             )}
 
@@ -372,6 +400,7 @@ export default function App() {
                 {view === 'admin' ? 'Painel Administrativo' : 
                  view === 'archive' ? 'Arquivo de Revisão' : 
                  view === 'resources' ? 'Fontes de Pesquisa' : 
+                 view === 'management' ? 'Gestão Acadêmica' :
                  `Bem-vindo, ${currentUserProfile?.role === 'professor' ? 'Professor' : 'Ligante'} ${currentUserProfile?.full_name || session?.user?.email?.split('@')[0]}`}
               </h2>
               <p className="text-slate-500 font-medium">
@@ -381,12 +410,14 @@ export default function App() {
                   ? 'Consulte os trabalhos aprovados e rejeitados pela banca.'
                   : view === 'resources'
                   ? 'Acesse repositórios e revistas acadêmicas para suas pesquisas.'
+                  : view === 'management'
+                  ? 'Controle de supervisão acadêmica e acessos a repositórios.'
                   : 'Gerencie e organize as evidências científicas da LAPSI.'}
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest bg-white px-4 py-2 rounded-full border border-slate-100 academic-shadow">
               <Info className="w-4 h-4 text-brand-500" />
-              <span>{view === 'admin' ? 'Controle Geral' : view === 'archive' ? 'Consulta Pública' : view === 'resources' ? 'Repositórios' : 'Visão Geral do Projeto'}</span>
+              <span>{view === 'admin' ? 'Controle Geral' : view === 'archive' ? 'Consulta Pública' : view === 'resources' ? 'Repositórios' : view === 'management' ? 'Gestão Acadêmica' : 'Visão Geral do Projeto'}</span>
             </div>
           </div>
 
@@ -399,6 +430,7 @@ export default function App() {
               onUpdateAssignments={fetchAssignments}
               currentAdminEmail={session?.user?.email || ''}
               currentAdminName={currentUserProfile?.full_name || session?.user?.user_metadata?.full_name || ''}
+              profiles={profiles}
             />
           ) : view === 'archive' ? (
             <ReviewArchive publications={publications} />
@@ -415,11 +447,30 @@ export default function App() {
               onUpdateAccess={fetchResourceAccess}
               profiles={profiles}
             />
+          ) : view === 'management' ? (
+            <ManagementView 
+              assignments={assignments}
+              profiles={profiles}
+              resources={resources}
+              resourceAccess={resourceAccess}
+            />
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-12">
+              {/* Personal Stats Section */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-serif font-bold text-slate-900">Seu Progresso Acadêmico</h3>
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <Clock className="w-3 h-3" />
+                    Atualizado em tempo real
+                  </div>
+                </div>
+                <Stats publications={userPublications} />
+              </div>
+
               {/* My Assigned Admin Banner (for students) */}
               {!isAdmin && !isSuperAdmin && (
-                <div className="bg-gradient-to-r from-brand-900 to-brand-800 rounded-3xl p-8 text-white academic-shadow relative overflow-hidden">
+                <div className="bg-gradient-to-r from-brand-900 to-brand-800 rounded-[2.5rem] p-8 text-white academic-shadow relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
                   <div className="relative z-10 flex items-start gap-6">
                     <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
@@ -451,7 +502,7 @@ export default function App() {
 
               {/* Instructions Banner for Ligantes */}
               {!isAdmin && !isSuperAdmin && (
-                <div className="bg-gradient-to-r from-indigo-500 to-brand-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="bg-gradient-to-r from-indigo-500 to-brand-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm border border-white/20">
@@ -511,36 +562,11 @@ export default function App() {
                 </div>
               )}
 
-              {/* Criteria Section */}
-              <Criteria />
-
-              {/* Stats Section */}
-              <Stats publications={publications} />
-
               {/* Main Content Area */}
               <div className="space-y-10">
-                <AnimatePresence>
-                  {showForm && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <PublicationForm 
-                        onSuccess={() => {
-                          setShowForm(false);
-                          fetchPublications();
-                        }}
-                        onCancel={() => setShowForm(false)}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-serif font-bold text-slate-900">Repositório de Publicações</h3>
+                    <h3 className="text-xl font-serif font-bold text-slate-900">Seus Registros de Publicação</h3>
                   </div>
                   
                   {loading ? (
@@ -553,7 +579,7 @@ export default function App() {
                     </div>
                   ) : (
                     <PublicationList 
-                      publications={publications} 
+                      publications={userPublications} 
                       onDelete={fetchPublications}
                       searchTerm={searchTerm}
                       setSearchTerm={setSearchTerm}
@@ -561,6 +587,9 @@ export default function App() {
                   )}
                 </div>
               </div>
+
+              {/* Criteria Section */}
+              <Criteria />
             </div>
           )}
         </main>
@@ -572,6 +601,35 @@ export default function App() {
           </p>
         </footer>
       </div>
+
+      {/* Modal for New Publication */}
+      <AnimatePresence>
+        {showForm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowForm(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto academic-shadow"
+            >
+              <PublicationForm 
+                onSuccess={() => {
+                  setShowForm(false);
+                  fetchPublications();
+                }}
+                onCancel={() => setShowForm(false)}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
