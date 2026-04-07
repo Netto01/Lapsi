@@ -11,7 +11,7 @@ import Criteria from './components/Criteria';
 import ReviewArchive from './components/ReviewArchive';
 import ResourcesView from './components/ResourcesView';
 import ManagementView from './components/ManagementView';
-import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, Key, Globe, ShieldCheck, User, ClipboardList, Clock } from 'lucide-react';
+import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, Key, Globe, ShieldCheck, User, ClipboardList, Clock, Menu, X as CloseIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Session } from '@supabase/supabase-js';
 
@@ -22,6 +22,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [session, setSession] = useState<Session | null>(null);
   const [view, setView] = useState<'dashboard' | 'admin' | 'archive' | 'resources' | 'management'>('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [assignments, setAssignments] = useState<AdminAssignment[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [resources, setResources] = useState<AcademicResource[]>([]);
@@ -252,10 +253,32 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] font-sans text-slate-900 selection:bg-brand-100 selection:text-brand-900 flex">
+    <div className="min-h-screen bg-[#F8F9FA] font-sans text-slate-900 selection:bg-brand-100 selection:text-brand-900 flex flex-col lg:flex-row">
+      {/* Mobile Header */}
+      <header className="lg:hidden bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between sticky top-0 z-[60] academic-shadow">
+        <div className="flex items-center gap-3">
+          <img 
+            src="https://yafmivbcakhcxyimmkvs.supabase.co/storage/v1/object/public/logo/logo.png" 
+            alt="LAPSI Logo" 
+            className="w-8 h-8 object-contain"
+            referrerPolicy="no-referrer"
+          />
+          <h1 className="text-xl font-serif font-bold text-slate-900 tracking-tight">LAPSI</h1>
+        </div>
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-600"
+        >
+          {isSidebarOpen ? <CloseIcon className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </header>
+
       {/* Sidebar Navigation */}
-      <aside className="w-72 bg-white border-r border-slate-100 sticky top-0 h-screen flex flex-col z-50 academic-shadow">
-        <div className="p-8 flex flex-col items-center text-center border-b border-slate-50">
+      <aside className={`
+        fixed inset-y-0 left-0 z-[70] w-72 bg-white border-r border-slate-100 flex flex-col academic-shadow transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-8 hidden lg:flex flex-col items-center text-center border-b border-slate-50">
           <div className="w-24 h-24 rounded-3xl flex items-center justify-center overflow-hidden bg-white shadow-md border border-slate-100 mb-4 group transition-transform hover:scale-105">
             <img 
               src="https://yafmivbcakhcxyimmkvs.supabase.co/storage/v1/object/public/logo/logo.png" 
@@ -276,7 +299,10 @@ export default function App() {
           <div className="space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] px-4 mb-4">Menu Principal</p>
             <button 
-              onClick={() => setView('dashboard')}
+              onClick={() => {
+                setView('dashboard');
+                setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
                 view === 'dashboard' 
                   ? 'bg-brand-50 text-brand-700 border-brand-100' 
@@ -289,7 +315,10 @@ export default function App() {
             
             {isAdmin && (
               <button 
-                onClick={() => setView('admin')}
+                onClick={() => {
+                  setView('admin');
+                  setIsSidebarOpen(false);
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
                   view === 'admin' 
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
@@ -303,7 +332,10 @@ export default function App() {
 
             {isSuperAdmin && (
               <button 
-                onClick={() => setView('management')}
+                onClick={() => {
+                  setView('management');
+                  setIsSidebarOpen(false);
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
                   view === 'management' 
                     ? 'bg-violet-50 text-violet-700 border-violet-100' 
@@ -316,7 +348,10 @@ export default function App() {
             )}
 
             <button 
-              onClick={() => setView('archive')}
+              onClick={() => {
+                setView('archive');
+                setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
                 view === 'archive' 
                   ? 'bg-blue-50 text-blue-700 border-blue-100' 
@@ -328,7 +363,10 @@ export default function App() {
             </button>
 
             <button 
-              onClick={() => setView('resources')}
+              onClick={() => {
+                setView('resources');
+                setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border ${
                 view === 'resources' 
                   ? 'bg-indigo-50 text-indigo-700 border-indigo-100' 
@@ -346,6 +384,7 @@ export default function App() {
               onClick={() => {
                 setView('dashboard');
                 setShowForm(true);
+                setIsSidebarOpen(false);
               }}
               className="w-full flex items-center gap-3 bg-brand-900 hover:bg-brand-950 text-white px-4 py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-xl shadow-brand-900/10 active:scale-95"
             >
@@ -384,9 +423,17 @@ export default function App() {
         </div>
       </aside>
 
+      {/* Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[65] lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto">
-        <main className="max-w-6xl mx-auto w-full px-8 py-12 space-y-12">
+        <main className="max-w-6xl mx-auto w-full px-4 md:px-8 py-8 md:py-12 space-y-8 md:space-y-12">
           {/* Welcome Section */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
