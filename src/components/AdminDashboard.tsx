@@ -49,8 +49,10 @@ export default function AdminDashboard({
     }
   };
 
-  const myStudents = assignments
-    .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
+  const myAssignments = assignments
+    .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName);
+
+  const myStudents = myAssignments
     .map(a => a.assigned_user_email || a.assigned_user_name || '');
 
   const visiblePublications = isSuperAdmin 
@@ -132,13 +134,15 @@ export default function AdminDashboard({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {myStudents.map((student, idx) => {
-                const studentPubs = publications.filter(p => p.user_email === student || p.user_name === student);
+              {myAssignments.map((assignment, idx) => {
+                const studentEmail = assignment.assigned_user_email || '';
+                const studentName = assignment.assigned_user_name || studentEmail;
+                const studentPubs = publications.filter(p => p.user_email === studentEmail || p.user_name === studentName);
                 const pendingPubs = studentPubs.filter(p => p.status === 'pending').length;
                 
                 return (
                   <motion.div 
-                    key={student}
+                    key={assignment.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.05 }}
@@ -146,10 +150,10 @@ export default function AdminDashboard({
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-brand-600 font-bold text-xs">
-                        {student.substring(0, 2).toUpperCase()}
+                        {studentName.substring(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-900 truncate" title={student}>{student}</p>
+                        <p className="text-sm font-bold text-slate-900 truncate" title={studentName}>{studentName}</p>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest">{studentPubs.length} Registros</p>
                       </div>
                     </div>
