@@ -53,9 +53,13 @@ export default function AdminDashboard({
     .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
     .map(a => a.assigned_user_email || a.assigned_user_name || '');
 
-  const visiblePublications = publications.filter(p => myStudents.includes(p.user_email) || myStudents.includes(p.user_name));
+  const visiblePublications = isSuperAdmin 
+    ? publications 
+    : publications.filter(p => myStudents.includes(p.user_email) || myStudents.includes(p.user_name));
 
-  const visibleResources = isSuperAdmin 
+  const isAdmin = ADMIN_EMAILS.includes(currentAdminEmail);
+
+  const visibleResources = (isSuperAdmin || isAdmin) 
     ? resources 
     : resources.filter(res => 
         res.created_by_email === currentAdminEmail ||

@@ -4,6 +4,8 @@ export const ADMIN_EMAILS = [
   'caio.brum@ulbra.br',
   'isaura.rossatto@ulbra.br',
   'wysney.rocha@ulbra.br',
+  'analua@rede.ulbra.br',
+  'izabellamenezes@rede.ulbra.br',
   'manuela.vilela@rede.ulbra.br',
   'cleislene@rede.ulbra.br',
   'bia.sar2020@rede.ulbra.br',
@@ -20,9 +22,16 @@ export const ADMIN_EMAILS = [
 ];
 
 export const SUPER_ADMIN_EMAILS = [
-  'gabrielmasc@rede.ulbra.br',
-  'alinne.aires@rede.ulbra.br',
   'netoarlindo389@gmail.com',
-  'lapsiulbra@gmail.com',
-   'mayelle.batista@ulbra.br'
+  'gabrielmasc@rede.ulbra.br',
+  'alinne.aires@rede.ulbra.br'
+];
+
+export const DOCENTE_ORIENTADOR_EMAILS = [
+  'mayelle.batista@ulbra.br',
+  'luiz.santana@ulbra.br',
+  'caio.brum@ulbra.br',
+  'isaura.rossatto@ulbra.br',
+  'wysney.rocha@ulbra.br',
+  'netoarlindo389@gmail.com'
 ];

@@ -449,6 +449,9 @@ export default function App() {
               profiles={profiles}
               resources={resources}
               resourceAccess={resourceAccess}
+              onUpdateAssignments={fetchAssignments}
+              onUpdateAccess={fetchResourceAccess}
+              currentAdminEmail={session?.user?.email || ''}
             />
           ) : (
             <div className="space-y-12">

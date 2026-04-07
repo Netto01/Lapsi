@@ -52,9 +52,8 @@ export default function ResourcesView({
     .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
     .map(a => a.assigned_user_email || a.assigned_user_name || '');
 
-  // Filter resources: only Super Admin sees everything. 
-  // Professors see what they created, have access to, or their students have access to.
-  const visibleResources = isSuperAdmin 
+  // Filter resources: Super Admin and Admins see everything.
+  const visibleResources = (isSuperAdmin || isAdmin) 
     ? resources 
     : resources.filter(res => 
         res.created_by_email === currentAdminEmail ||
