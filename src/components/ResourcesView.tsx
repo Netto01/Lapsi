@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { AcademicResource, UserResourceAccess, Profile, AdminAssignment } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe, Plus, Trash2, ExternalLink, BookOpen, Database, Info, X, Check, Users, Shield } from 'lucide-react';
+import { Globe, Plus, Trash2, ExternalLink, BookOpen, Database, Info, X, Check, Users, Shield, Link as LinkIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { RESOURCE_JOURNAL_MAPPING } from '../constants';
 
 interface ResourcesViewProps {
   resources: AcademicResource[];
@@ -36,6 +37,7 @@ export default function ResourcesView({
   const [newResource, setNewResource] = useState({
     title: '',
     url: '',
+    journal_url: '',
     description: '',
     category: 'Repositório' as AcademicResource['category']
   });
@@ -101,7 +103,7 @@ export default function ResourcesView({
       
       onUpdate();
       setShowAddForm(false);
-      setNewResource({ title: '', url: '', description: '', category: 'Repositório' });
+      setNewResource({ title: '', url: '', journal_url: '', description: '', category: 'Repositório' });
       setSelectedStudents([]);
     } catch (error) {
       console.error('Error adding resource:', error);
@@ -233,6 +235,17 @@ export default function ResourcesView({
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
                   value={newResource.url}
                   onChange={e => setNewResource({ ...newResource, url: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Link do Periódico (Opcional)</label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
+                  value={newResource.journal_url}
+                  onChange={e => setNewResource({ ...newResource, journal_url: e.target.value })}
                 />
               </div>
 
@@ -403,7 +416,7 @@ export default function ResourcesView({
               )}
             </AnimatePresence>
 
-            <div className="mt-6 pt-4 border-t border-slate-50">
+            <div className="mt-6 pt-4 border-t border-slate-50 space-y-2">
               <a
                 href={resource.url}
                 target="_blank"
@@ -413,6 +426,18 @@ export default function ResourcesView({
                 <span>Acessar Fonte</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
+              
+              {(resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]) && (
+                <a
+                  href={resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                >
+                  <span>Acessar Periódico</span>
+                  <LinkIcon className="w-3 h-3" />
+                </a>
+              )}
             </div>
           </motion.div>
         ))}

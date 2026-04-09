@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Publication, PublicationStatus, AdminAssignment, Profile, AcademicResource, UserResourceAccess } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink, ShieldCheck, Users, BookOpen, Database, Globe } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink, ShieldCheck, Users, BookOpen, Database, Globe, Link as LinkIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { ADMIN_EMAILS } from '../constants';
+import { ADMIN_EMAILS, RESOURCE_JOURNAL_MAPPING } from '../constants';
 
 interface AdminDashboardProps {
   publications: Publication[];
@@ -379,6 +379,19 @@ export default function AdminDashboard({
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">{resource.description}</p>
+                <div className="flex flex-col gap-2 mb-4">
+                  {(resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]) && (
+                    <a
+                      href={resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all"
+                    >
+                      <span>Acessar Periódico</span>
+                      <LinkIcon className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
                 <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acesso Autorizado</span>
                   <div className="flex -space-x-2">
@@ -500,17 +513,30 @@ export default function AdminDashboard({
                     <p className="text-sm text-slate-700 font-medium">{viewingPub.authors}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ano / Base de Dados</p>
-                    <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ano / Área do Conhecimento</p>
+                    <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.knowledge_area}</p>
                   </div>
                 </div>
 
                 {viewingPub.journal_name && (
                   <div className="space-y-2">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome da Revista</p>
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-brand-500" />
-                      <p className="text-sm text-slate-700 font-bold">{viewingPub.journal_name}</p>
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-5 h-5 text-brand-500" />
+                        <p className="text-sm text-slate-700 font-bold">{viewingPub.journal_name}</p>
+                      </div>
+                      {RESOURCE_JOURNAL_MAPPING[viewingPub.journal_name] && (
+                        <a 
+                          href={RESOURCE_JOURNAL_MAPPING[viewingPub.journal_name]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 text-brand-700 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-brand-100 transition-all"
+                        >
+                          <LinkIcon className="w-3 h-3" />
+                          Periódico
+                        </a>
+                      )}
                     </div>
                   </div>
                 )}

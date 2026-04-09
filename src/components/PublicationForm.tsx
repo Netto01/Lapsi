@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { PublicationInsert, NaturezaPublicacao, CriterioInclusao } from '../types';
 import { supabase } from '../lib/supabase';
-import { Loader2, Plus, X, Book, Users, Calendar, Database, FileType, CheckCircle, MessageSquare } from 'lucide-react';
+import { Loader2, Plus, X, Book, Users, Calendar, Database, FileType, CheckCircle, MessageSquare, Globe, Link as LinkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { RESOURCE_JOURNAL_MAPPING } from '../constants';
 
 interface PublicationFormProps {
   onSuccess: () => void;
@@ -24,7 +25,7 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
     title: '',
     abstract: '',
     year: new Date().getFullYear(),
-    database: '',
+    knowledge_area: '',
     nature: 'Artigo',
     inclusion_criterion: 'Pela leitura do título',
     reason: '',
@@ -160,14 +161,14 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
           </div>
           <div className="space-y-1">
             <label className={labelClasses}>
-              <Database className="w-3.5 h-3.5" /> Base de Dados
+              <Globe className="w-3.5 h-3.5" /> Área do Conhecimento
             </label>
             <input
               required
-              placeholder="Ex: PubMed, Scielo"
+              placeholder="Ex: Psicologia, Medicina"
               className={inputClasses}
-              value={formData.database}
-              onChange={e => setFormData({ ...formData, database: e.target.value })}
+              value={formData.knowledge_area}
+              onChange={e => setFormData({ ...formData, knowledge_area: e.target.value })}
             />
           </div>
           <div className="space-y-1">
@@ -198,13 +199,26 @@ export default function PublicationForm({ onSuccess, onCancel }: PublicationForm
                 <label className={labelClasses}>
                   <Book className="w-3.5 h-3.5" /> Nome da Revista
                 </label>
-                <input
-                  required
-                  placeholder="Ex: Revista Brasileira de Psiquiatria"
-                  className={inputClasses}
-                  value={formData.journal_name || ''}
-                  onChange={e => setFormData({ ...formData, journal_name: e.target.value })}
-                />
+                <div className="relative">
+                  <input
+                    required
+                    placeholder="Ex: Revista Brasileira de Psiquiatria"
+                    className={`${inputClasses} ${formData.journal_name && RESOURCE_JOURNAL_MAPPING[formData.journal_name] ? 'pr-24' : ''}`}
+                    value={formData.journal_name || ''}
+                    onChange={e => setFormData({ ...formData, journal_name: e.target.value })}
+                  />
+                  {formData.journal_name && RESOURCE_JOURNAL_MAPPING[formData.journal_name] && (
+                    <a
+                      href={RESOURCE_JOURNAL_MAPPING[formData.journal_name]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 text-brand-700 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-brand-100 transition-all"
+                    >
+                      <LinkIcon className="w-3 h-3" />
+                      Periódico
+                    </a>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

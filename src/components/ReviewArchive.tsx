@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Publication } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, XCircle, Search, Calendar, User, Database, MessageSquare, Tag, X, ChevronRight, ExternalLink, BookOpen } from 'lucide-react';
+import { CheckCircle2, XCircle, Search, Calendar, User, Database, MessageSquare, Tag, X, ChevronRight, ExternalLink, BookOpen, Globe, Link as LinkIcon } from 'lucide-react';
+import { RESOURCE_JOURNAL_MAPPING } from '../constants';
 
 interface ReviewArchiveProps {
   publications: Publication[];
@@ -141,8 +142,8 @@ export default function ReviewArchive({
                       <span>{pub.year}</span>
                     </div>
                     <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
-                      <Database className="w-4 h-4 text-brand-400" />
-                      <span>{pub.database}</span>
+                      <Globe className="w-4 h-4 text-brand-400" />
+                      <span>{pub.knowledge_area}</span>
                     </div>
                     {pub.link && (
                       <a 
@@ -233,17 +234,30 @@ export default function ReviewArchive({
                       <p className="text-sm text-slate-700 font-medium">{viewingPub.authors}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ano / Base de Dados</p>
-                      <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.database}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ano / Área do Conhecimento</p>
+                      <p className="text-sm text-slate-700 font-medium">{viewingPub.year} &bull; {viewingPub.knowledge_area}</p>
                     </div>
                   </div>
 
                   {viewingPub.journal_name && (
                     <div className="space-y-2">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome da Revista</p>
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
-                        <BookOpen className="w-5 h-5 text-brand-500" />
-                        <p className="text-sm text-slate-700 font-bold">{viewingPub.journal_name}</p>
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <BookOpen className="w-5 h-5 text-brand-500" />
+                          <p className="text-sm text-slate-700 font-bold">{viewingPub.journal_name}</p>
+                        </div>
+                        {RESOURCE_JOURNAL_MAPPING[viewingPub.journal_name] && (
+                          <a 
+                            href={RESOURCE_JOURNAL_MAPPING[viewingPub.journal_name]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 text-brand-700 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-brand-100 transition-all"
+                          >
+                            <LinkIcon className="w-3 h-3" />
+                            Periódico
+                          </a>
+                        )}
                       </div>
                     </div>
                   )}

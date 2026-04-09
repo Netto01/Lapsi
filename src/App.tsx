@@ -11,9 +11,10 @@ import Criteria from './components/Criteria';
 import ReviewArchive from './components/ReviewArchive';
 import ResourcesView from './components/ResourcesView';
 import ManagementView from './components/ManagementView';
-import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, Key, Globe, ShieldCheck, User, ClipboardList, Clock, Menu, X as CloseIcon } from 'lucide-react';
+import { Plus, BookOpen, Loader2, Database, AlertTriangle, ExternalLink, LayoutDashboard, Settings, Info, FileText, Users, LogOut, Key, Globe, ShieldCheck, User, ClipboardList, Clock, Menu, X as CloseIcon, Link as LinkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Session } from '@supabase/supabase-js';
+import { RESOURCE_JOURNAL_MAPPING } from './constants';
 
 export default function App() {
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -594,7 +595,19 @@ export default function App() {
                           </div>
                           <div className="flex-1 space-y-1">
                             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{resource.category}</span>
-                            <h4 className="text-sm font-bold text-slate-900">{resource.title}</h4>
+                            <h4 className="text-sm font-bold text-slate-900 mb-4">{resource.title}</h4>
+                            
+                            {(resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]) && (
+                              <a
+                                href={resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 w-full py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all"
+                              >
+                                <span>Acessar Periódico</span>
+                                <LinkIcon className="w-3 h-3" />
+                              </a>
+                            )}
                           </div>
                         </div>
                       ))}

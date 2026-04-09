@@ -21,7 +21,7 @@ export interface Publication {
   title: string;
   abstract: string;
   year: number;
-  database: string;
+  knowledge_area: string;
   nature: NaturezaPublicacao;
   inclusion_criterion: CriterioInclusao;
   reason: string;
@@ -58,6 +58,7 @@ export interface AcademicResource {
   id: string;
   title: string;
   url: string;
+  journal_url?: string;
   description?: string;
   category: 'Repositório' | 'Revista' | 'Outro';
   created_by_email?: string;
