@@ -595,14 +595,26 @@ export default function App() {
                           </div>
                           <div className="flex-1 space-y-1">
                             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{resource.category}</span>
-                            <h4 className="text-sm font-bold text-slate-900 mb-4">{resource.title}</h4>
+                            <h4 className="text-sm font-bold text-slate-900">{resource.title}</h4>
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-slate-50 space-y-2">
+                            <a
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 w-full py-3 bg-slate-50 hover:bg-brand-50 text-slate-600 hover:text-brand-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                            >
+                              <span>Acessar Fonte</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
                             
                             {(resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]) && (
                               <a
                                 href={resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center justify-center gap-2 w-full py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all"
+                                className="flex items-center justify-center gap-2 w-full py-3 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                               >
                                 <span>Acessar Periódico</span>
                                 <LinkIcon className="w-3 h-3" />
