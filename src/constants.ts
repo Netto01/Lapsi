@@ -23,9 +23,9 @@ export const ADMIN_EMAILS = [
 
 export const RESOURCE_JOURNAL_MAPPING: Record<string, string> = {
   // Repositories
-  'Afya - Araguaína': 'https://itpacaraguaina.emnuvens.com.br/itpac',
-  'Afya - Palmas': 'https://itpacpalmas.emnuvens.com.br/multi',
-  'Afya - Porto': 'https://itpacporto.emnuvens.com.br/itpacporto',
+  'Afya - Araguaína': 'https://araguaina.afya.com.br/institucional/revista-cientifica#edicao-atual',
+  'Afya - Palmas': 'https://rcmulti.emnuvens.com.br/rcm',
+  'Afya - Porto': 'https://itpacporto.emnuvens.com.br/revista/index',
   'UniCatólica': 'https://to.catolica.edu.br/portal/conheca/biblioteca/revistas/',
   'UNITOP': 'https://www.revista.faculdadeitop.edu.br/index.php/revista',
   'CEULP': 'https://ulbra-to.br/singular/index.php/SingularSH/index',
@@ -41,9 +41,9 @@ export const RESOURCE_JOURNAL_MAPPING: Record<string, string> = {
   'UFNT': 'https://periodicos.ufnt.edu.br/',
   
   // Journal Names (Mapping journal names to their URLs)
-  'Afya Araguaína | Revista Científica': 'https://itpacaraguaina.emnuvens.com.br/itpac',
-  'Revista Científica MULTI': 'https://itpacpalmas.emnuvens.com.br/multi',
-  'Revista Científica do Tocantins': 'https://itpacporto.emnuvens.com.br/itpacporto',
+  'Afya Araguaína | Revista Científica': 'https://araguaina.afya.com.br/institucional/revista-cientifica#edicao-atual',
+  'Revista Científica MULTI': 'https://rcmulti.emnuvens.com.br/rcm',
+  'Revista Científica do Tocantins': 'https://itpacporto.emnuvens.com.br/revista/index',
   'Singular': 'https://ulbra-to.br/singular/index.php/SingularSH/index',
   'Revista Orione': 'https://seer.catolicaorione.edu.br/index.php/revistaorione',
 };

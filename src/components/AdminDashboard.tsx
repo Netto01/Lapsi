@@ -369,9 +369,6 @@ export default function AdminDashboard({
                     <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
                       {resource.category === 'Repositório' ? <Database className="w-5 h-5" /> : <Globe className="w-5 h-5" />}
                     </div>
-                    <a href={resource.url} target="_blank" rel="noopener noreferrer" className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
                   </div>
                   <div className="flex-1 space-y-1 ml-3">
                     <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{resource.category}</span>
@@ -379,13 +376,24 @@ export default function AdminDashboard({
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">{resource.description}</p>
-                <div className="flex flex-col gap-2 mb-4">
+                
+                <div className="mt-6 pt-4 border-t border-slate-50 space-y-2 mb-4">
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-slate-50 hover:bg-brand-50 text-slate-600 hover:text-brand-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                  >
+                    <span>Acessar Fonte</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  
                   {(resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]) && (
                     <a
                       href={resource.journal_url || RESOURCE_JOURNAL_MAPPING[resource.title]}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all"
+                      className="flex items-center justify-center gap-2 w-full py-3 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                     >
                       <span>Acessar Periódico</span>
                       <LinkIcon className="w-3 h-3" />
