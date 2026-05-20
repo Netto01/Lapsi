@@ -1,56 +1,40 @@
-# LAPSI - Liga Acadêmica de Psicologia e Saúde Mental
+# LAPSI - Sistema de Gestão de Evidências Científicas
 
-O **LAPSI** é uma plataforma acadêmica robusta desenvolvida para a gestão, organização e revisão de evidências científicas. O sistema permite que ligantes submetam seus trabalhos e publicações para uma banca avaliadora, garantindo um fluxo de trabalho estruturado e transparente.
+O **LAPSI (Liga Acadêmica de Psicologia e Saúde Mental)** é uma plataforma acadêmica de alta performance desenvolvida para otimizar o fluxo de revisão bibliográfica, garantindo que a produção científica da Liga atinja os mais altos padrões de rigor e integridade.
 
-## 🚀 Funcionalidades Principais
+## 🧐 Como o Sistema Funciona?
 
-### Para Ligantes
-- **Submissão de Publicações**: Formulário detalhado para registro de artigos, resumos e outras produções acadêmicas.
-- **Dashboard Pessoal**: Acompanhamento em tempo real do status de cada submissão (Pendente, Aprovado ou Rejeitado).
-- **Critérios de Inclusão**: Acesso rápido às diretrizes acadêmicas da Liga.
-- **Estatísticas**: Visualização do progresso individual e coletivo da produção científica.
+O sistema opera através de um fluxo de trabalho estruturado em três camadas principais, permitindo uma colaboração eficiente entre pesquisadores e revisores:
 
-### Para Administradores (Banca)
-- **Fila de Revisão**: Painel exclusivo para análise de trabalhos submetidos por ligantes atribuídos.
-- **Feedback Acadêmico**: Possibilidade de aprovar ou rejeitar registros com comentários justificativos.
-- **Rastreabilidade**: Identificação automática de qual administrador realizou cada revisão.
+1.  **Submissão (O Ligante):** O pesquisador (ligante) realiza a triagem de artigos e obras científicas em diversas bases de dados (como PubMed, SciELO, e as revistas acadêmicas mapeadas no sistema). Ele cadastra os detalhes da obra (título, resumo, link, autores) e justifica sua inclusão ou exclusão com base nos critérios da Liga.
+2.  **Revisão (O Orientador/Admin):** Cada registro submetido entra em uma fila de revisão. Um docente orientador ou administrador responsável analisa a submissão. Ele verifica se o resumo condiz com o título, se o link é válido e se a justificativa de inclusão/exclusão é academicamente sólida.
+3.  **Consolidação (O Arquivo):** Após a revisão, o trabalho é movido para o **Arquivo de Revisão**. Este arquivo serve como uma "biblioteca de decisões", onde outros membros podem consultar o que já foi validado, evitando retrabalho e servindo de base para a escrita de artigos finais.
 
-### Para Super Administradores
-- **Gestão de Permissões**: Controle total sobre qual administrador é responsável por revisar cada ligante.
-- **Auditoria**: Visualização de quem concedeu cada permissão no sistema.
-- **Visão Geral**: Acesso a todos os registros e estatísticas globais da plataforma.
+## ⚖️ Redução de Viés e Integridade Científica
 
-### Consulta Pública
-- **Arquivo de Revisão**: Repositório centralizado de todos os trabalhos aceitos e recusados, servindo como base de conhecimento para a Liga.
+O maior diferencial e benefício do uso do sistema LAPSI é a **validação por pares (Peer Review)**. 
+
+No método científico tradicional, a triagem realizada por apenas uma pessoa está sujeita a vieses cognitivos e subjetividade. No LAPSI:
+- **Nenhum dado é definitivo sem uma segunda leitura:** Tudo o que o ligante propõe deve ser obrigatoriamente validado por uma segunda pessoa (Docente ou Admin).
+- **Eliminação do "ponto cego":** O revisor atua como um controle de qualidade neutro, identificando erros de interpretação ou falhas na aplicação dos critérios de inclusão que poderiam passar despercebidos pelo autor original.
+- **Transparência:** O feedback é registrado e auditável, promovendo uma cultura de rigor acadêmico onde as decisões de pesquisa são baseadas em critérios técnicos, não em opiniões individuais.
+
+## 🌟 Benefícios para o Trabalho Proposto
+
+O uso desta plataforma traz vantagens estratégicas para a elaboração de artigos e revisões sistemáticas:
+
+*   **Histórico de Seleção:** Mantém um registro exato de quantos artigos foram lidos, quantos foram incluídos e — mais importante — por que os outros foram excluídos (essencial para fluxogramas PRISMA).
+*   **Centralização de Fontes:** Acesso direto aos periódicos e repositórios oficiais através dos botões integrados, agilizando a busca por novas evidências.
+*   **Organização Multi-usuário:** Permite que vários pesquisadores trabalhem simultaneamente sem que ocorra sobreposição de tarefas ou perda de dados.
+*   **Feedback Educativo:** O ligante não apenas recebe um "sim" ou "não", mas um parecer acadêmico que contribui para sua formação como pesquisador.
 
 ## 🛠️ Stack Tecnológica
 
-- **Frontend**: [React](https://reactjs.org/) com [Vite](https://vitejs.dev/)
-- **Estilização**: [Tailwind CSS](https://tailwindcss.com/)
-- **Animações**: [Framer Motion](https://www.framer.com/motion/)
-- **Ícones**: [Lucide React](https://lucide.dev/)
-- **Backend & Auth**: [Supabase](https://supabase.com/) (PostgreSQL + GoTrue)
-
-## ⚙️ Configuração do Ambiente
-
-O sistema utiliza o Supabase para persistência de dados e autenticação. Para rodar o projeto, são necessárias as seguintes variáveis de ambiente:
-
-```env
-VITE_SUPABASE_URL=sua_url_do_supabase
-VITE_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
-```
-
-### Estrutura do Banco de Dados (SQL)
-
-Para o funcionamento correto, as seguintes tabelas devem ser criadas no Supabase:
-
-1. **`profiles`**: Armazena dados dos usuários (nome, e-mail, papel).
-2. **`publications`**: Armazena os registros acadêmicos submetidos.
-3. **`admin_assignments`**: Gerencia as permissões de revisão entre admins e ligantes.
-
-## 📄 Licença
-
-Este projeto é de uso exclusivo da **Liga Acadêmica de Psicologia e Saúde Mental (LAPSI)**.
+- **Frontend**: React + Vite (Interface ultra-rápida e moderna)
+- **Estilização**: Tailwind CSS (Design responsivo e acadêmico)
+- **Backend Automático**: Supabase (PostgreSQL para dados críticos e segurança)
+- **Animações**: Motion (Transições fluidas que melhoram a experiência de uso)
 
 ---
-*Desenvolvido para elevar o padrão da pesquisa acadêmica em Saúde Mental.*
+
+**LAPSI: Elevando o padrão da pesquisa em Saúde Mental através da tecnologia e do rigor científico.**

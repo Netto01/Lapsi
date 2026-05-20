@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Publication, PublicationStatus, AdminAssignment, Profile, AcademicResource, UserResourceAccess } from '../types';
+import { Publication, PublicationStatus, AdminAssignment, Profile, AcademicResource, UserResourceAccess, CriterioInclusao } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink, ShieldCheck, Users, BookOpen, Database, Globe, Link as LinkIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -7,7 +7,7 @@ import { ADMIN_EMAILS, RESOURCE_JOURNAL_MAPPING } from '../constants';
 
 interface AdminDashboardProps {
   publications: Publication[];
-  onUpdateStatus: (id: string, status: 'approved' | 'rejected', comment?: string) => void;
+  onUpdateStatus: (id: string, status: 'approved' | 'rejected', comment?: string, updatedCriterion?: CriterioInclusao) => void;
   isSuperAdmin: boolean;
   assignments: AdminAssignment[];
   onUpdateAssignments: () => void;
@@ -42,7 +42,32 @@ export default function AdminDashboard({
 
   const handleReviewSubmit = () => {
     if (reviewingId && reviewAction) {
-      onUpdateStatus(reviewingId, reviewAction, reviewComment);
+      const pub = publications.find(p => p.id === reviewingId);
+      if (pub) {
+        const isStudentIncluded = pub.inclusion_criterion !== 'Não incluso';
+        let finalStatus: 'approved' | 'rejected';
+        let updatedCriterion: CriterioInclusao | undefined;
+
+        if (reviewAction === 'approved') {
+          // Aprovar: aceita o critério colocado pelo aluno, se incluso ou não.
+          if (isStudentIncluded) {
+            finalStatus = 'approved';
+          } else {
+            finalStatus = 'rejected';
+          }
+        } else {
+          // Rejeitar: inverte a decisão do aluno
+          if (isStudentIncluded) {
+            finalStatus = 'rejected';
+            updatedCriterion = 'Não incluso';
+          } else {
+            finalStatus = 'approved';
+            updatedCriterion = 'Pela leitura do resumo';
+          }
+        }
+
+        onUpdateStatus(reviewingId, finalStatus, reviewComment, updatedCriterion);
+      }
       setReviewingId(null);
       setReviewComment('');
       setReviewAction(null);
@@ -416,65 +441,99 @@ export default function AdminDashboard({
 
       {/* Review Modal */}
       <AnimatePresence>
-        {reviewingId && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[2.5rem] academic-shadow border border-slate-100 w-full max-w-lg overflow-hidden"
-            >
-              <div className={`p-8 text-white ${reviewAction === 'approved' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
-                <h3 className="text-2xl font-serif font-bold flex items-center gap-3">
-                  {reviewAction === 'approved' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
-                  {reviewAction === 'approved' ? 'Aprovar Registro' : 'Rejeitar Registro'}
-                </h3>
-                <p className="text-white/80 text-sm mt-2">
-                  Adicione uma justificativa acadêmica para esta decisão.
-                </p>
-              </div>
-              
-              <div className="p-8 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Comentário da Revisão
-                  </label>
-                  <textarea 
-                    autoFocus
-                    placeholder="Ex: O trabalho atende a todos os critérios de inclusão estabelecidos..."
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-slate-900 placeholder:text-slate-400 text-sm resize-none"
-                    rows={4}
-                    value={reviewComment}
-                    onChange={(e) => setReviewComment(e.target.value)}
-                  />
-                </div>
+        {reviewingId && (() => {
+          const pub = publications.find(p => p.id === reviewingId);
+          const isStudentIncluded = pub && pub.inclusion_criterion !== 'Não incluso';
+          
+          let modalTitle = '';
+          let modalHelperText = '';
+          let outcomeText = '';
+          
+          if (pub && reviewAction) {
+            if (reviewAction === 'approved') {
+              modalTitle = 'Aprovar Decisão';
+              if (isStudentIncluded) {
+                modalHelperText = 'Você está concordando com a decisão de INCLUSÃO proposta pelo aluno.';
+                outcomeText = 'O trabalho será marcado como Aprovado (Incluso) no arquivo.';
+              } else {
+                modalHelperText = 'Você está concordando com a decisão de EXCLUSÃO proposta pelo aluno.';
+                outcomeText = 'O trabalho será marcado como Rejeitado (Não Incluso) no arquivo.';
+              }
+            } else {
+              modalTitle = 'Rejeitar Decisão';
+              if (isStudentIncluded) {
+                modalHelperText = 'Você está discordando do aluno e decidindo pela EXCLUSÃO deste trabalho.';
+                outcomeText = 'O trabalho será marcado como Rejeitado (Não Incluso) no arquivo.';
+              } else {
+                modalHelperText = 'Você está discordando do aluno e decidindo pela INCLUSÃO deste trabalho.';
+                outcomeText = 'O trabalho será marcado como Aprovado (Incluso) no arquivo.';
+              }
+            }
+          }
 
-                <div className="flex justify-end gap-4">
-                  <button 
-                    onClick={() => {
-                      setReviewingId(null);
-                      setReviewComment('');
-                      setReviewAction(null);
-                    }}
-                    className="px-6 py-3 text-slate-500 font-bold uppercase tracking-widest text-[10px] hover:text-slate-800 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    onClick={handleReviewSubmit}
-                    className={`px-8 py-3 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-lg ${
-                      reviewAction === 'approved' 
-                        ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' 
-                        : 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/20'
-                    }`}
-                  >
-                    Confirmar {reviewAction === 'approved' ? 'Aprovação' : 'Rejeição'}
-                  </button>
+          return (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-[2.5rem] academic-shadow border border-slate-100 w-full max-w-lg overflow-hidden"
+              >
+                <div className={`p-8 text-white ${reviewAction === 'approved' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+                  <h3 className="text-2xl font-serif font-bold flex items-center gap-3">
+                    {reviewAction === 'approved' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
+                    {modalTitle}
+                  </h3>
+                  <p className="text-white/90 text-sm mt-1">
+                    {modalHelperText}
+                  </p>
+                  <p className="text-white/90 text-[10px] font-bold uppercase tracking-widest mt-3 bg-white/10 px-3 py-1 rounded-lg border border-white/10 w-fit">
+                    Resultado: {outcomeText}
+                  </p>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
+                
+                <div className="p-8 space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      Justificativa / Comentário da Revisão
+                    </label>
+                    <textarea 
+                      autoFocus
+                      placeholder="Ex: O trabalho atende a todos os critérios de inclusão estabelecidos..."
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-slate-900 placeholder:text-slate-400 text-sm resize-none"
+                      rows={4}
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-4">
+                    <button 
+                      onClick={() => {
+                        setReviewingId(null);
+                        setReviewComment('');
+                        setReviewAction(null);
+                      }}
+                      className="px-6 py-3 text-slate-500 font-bold uppercase tracking-widest text-[10px] hover:text-slate-800 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={handleReviewSubmit}
+                      className={`px-8 py-3 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-lg ${
+                        reviewAction === 'approved' 
+                          ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' 
+                          : 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/20'
+                      }`}
+                    >
+                      Confirmar Decisão
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* Details Modal */}

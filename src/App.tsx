@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, isConfigured } from './lib/supabase';
-import { Publication, AdminAssignment, Profile, AcademicResource, UserResourceAccess } from './types';
+import { Publication, AdminAssignment, Profile, AcademicResource, UserResourceAccess, CriterioInclusao } from './types';
 import { ADMIN_EMAILS, SUPER_ADMIN_EMAILS } from './constants';
 import PublicationForm from './components/PublicationForm';
 import PublicationList from './components/PublicationList';
@@ -175,16 +175,22 @@ export default function App() {
     await supabase.auth.signOut();
   };
 
-  const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected', comment?: string) => {
+  const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected', comment?: string, updatedCriterion?: CriterioInclusao) => {
     try {
+      const updatePayload: any = { 
+        status, 
+        review_comment: comment,
+        reviewed_by_name: session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0],
+        reviewed_by_role: session?.user?.user_metadata?.role || 'ligante'
+      };
+
+      if (updatedCriterion) {
+        updatePayload.inclusion_criterion = updatedCriterion;
+      }
+
       const { error } = await supabase
         .from('publications')
-        .update({ 
-          status, 
-          review_comment: comment,
-          reviewed_by_name: session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0],
-          reviewed_by_role: session?.user?.user_metadata?.role || 'ligante'
-        })
+        .update(updatePayload)
         .eq('id', id);
 
       if (error) throw error;
