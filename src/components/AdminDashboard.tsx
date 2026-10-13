@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Publication, PublicationStatus, AdminAssignment, Profile, AcademicResource, UserResourceAccess, CriterioInclusao } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink, ShieldCheck, Users, BookOpen, Database, Globe, Link as LinkIcon } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, User, MessageSquare, Clock, Filter, Check, X, Search, Eye, ExternalLink, ShieldCheck, Users, BookOpen, Database, Globe, Link as LinkIcon, ChevronLeft, ChevronRight, Bookmark, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ADMIN_EMAILS, RESOURCE_JOURNAL_MAPPING } from '../constants';
+import { cleanCategoryName, getMacroNature } from './ReviewArchive';
 
 interface AdminDashboardProps {
   publications: Publication[];
@@ -32,6 +33,8 @@ export default function AdminDashboard({
 }: AdminDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | 'all'>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
+  const [natureFilter, setNatureFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [viewingPubId, setViewingPubId] = useState<string | null>(null);
@@ -74,42 +77,115 @@ export default function AdminDashboard({
     }
   };
 
-  const myAssignments = assignments
-    .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName);
+  const myAssignments = assignments.filter(a => {
+    const adminEmail = a.admin_email?.trim().toLowerCase();
+    const adminName = a.admin_name?.trim().toLowerCase();
+    const currentEmail = currentAdminEmail?.trim().toLowerCase();
+    const currentName = currentAdminName?.trim().toLowerCase();
+    return (
+      (adminEmail && adminEmail === currentEmail) ||
+      (adminName && adminName === currentName)
+    );
+  });
 
-  const myStudents = myAssignments
-    .map(a => a.assigned_user_email || a.assigned_user_name || '');
+  const myStudentEmails = myAssignments
+    .map(a => a.assigned_user_email?.trim().toLowerCase())
+    .filter(Boolean) as string[];
+
+  const myStudentNames = myAssignments
+    .map(a => a.assigned_user_name?.trim().toLowerCase())
+    .filter(Boolean) as string[];
+
+  const myStudents = myStudentEmails;
 
   const visiblePublications = isSuperAdmin 
     ? publications 
-    : publications.filter(p => myStudents.includes(p.user_email) || myStudents.includes(p.user_name));
+    : publications.filter(p => {
+        const pubEmail = p.user_email?.trim().toLowerCase();
+        const pubName = p.user_name?.trim().toLowerCase();
+        return (
+          (pubEmail && myStudentEmails.includes(pubEmail)) ||
+          (pubName && myStudentNames.includes(pubName))
+        );
+      });
 
-  const isAdmin = ADMIN_EMAILS.includes(currentAdminEmail);
+  const isAdmin = ADMIN_EMAILS.map(e => e.toLowerCase()).includes(currentAdminEmail?.toLowerCase());
 
   const visibleResources = (isSuperAdmin || isAdmin) 
     ? resources 
-    : resources.filter(res => 
-        res.created_by_email === currentAdminEmail ||
-        resourceAccess.some(acc => 
-          acc.resource_id === res.id && (
-            (acc.user_email && (acc.user_email === currentAdminEmail || myStudents.includes(acc.user_email))) ||
-            (acc.user_name && (acc.user_name === currentAdminName || myStudents.includes(acc.user_name)))
-          )
-        )
-      );
+    : resources.filter(res => {
+        const createdBy = res.created_by_email?.trim().toLowerCase();
+        const currentEmail = currentAdminEmail?.trim().toLowerCase();
+        if (createdBy && createdBy === currentEmail) return true;
+        
+        return resourceAccess.some(acc => {
+          if (acc.resource_id !== res.id) return false;
+          
+          const accEmail = acc.user_email?.trim().toLowerCase();
+          const accName = acc.user_name?.trim().toLowerCase();
+          const currentName = currentAdminName?.trim().toLowerCase();
+          
+          return (
+            (accEmail && (accEmail === currentEmail || myStudentEmails.includes(accEmail))) ||
+            (accName && (accName === currentName || myStudentNames.includes(accName)))
+          );
+        });
+      });
 
   const uniqueUsers = Array.from(new Set(visiblePublications.map(p => p.user_email))).map(email => {
     const pub = visiblePublications.find(p => p.user_email === email);
     return { email, name: pub?.user_name || email };
   });
 
+  const availableNatures = useMemo(() => {
+    const set = new Set<string>();
+    visiblePublications.forEach(p => {
+      if (p.nature) set.add(p.nature.trim());
+    });
+    return Array.from(set).sort();
+  }, [visiblePublications]);
+
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    visiblePublications.forEach(p => {
+      const cat = cleanCategoryName(p.knowledge_area);
+      if (cat) set.add(cat);
+    });
+    return Array.from(set).sort();
+  }, [visiblePublications]);
+
   const filteredPublications = visiblePublications.filter(pub => {
     const matchesStatus = statusFilter === 'all' || pub.status === statusFilter;
-    const matchesUser = userFilter === 'all' || pub.user_email === userFilter;
+    const pubEmail = pub.user_email?.trim().toLowerCase();
+    const pubName = pub.user_name?.trim().toLowerCase();
+    const matchesUser = userFilter === 'all' 
+      ? true 
+      : userFilter === 'mine'
+        ? ((pubEmail && myStudentEmails.includes(pubEmail)) || (pubName && myStudentNames.includes(pubName)))
+        : pub.user_email === userFilter;
+    const matchesNature = natureFilter === 'all' || 
+      (pub.nature && (pub.nature.trim().toLowerCase() === natureFilter.toLowerCase() || getMacroNature(pub.nature).toLowerCase() === natureFilter.toLowerCase()));
+    const matchesCategory = categoryFilter === 'all' || 
+      (cleanCategoryName(pub.knowledge_area).toLowerCase() === categoryFilter.toLowerCase());
     const matchesSearch = pub.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         pub.authors.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesUser && matchesSearch;
+                         pub.authors.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (pub.nature && pub.nature.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (pub.knowledge_area && pub.knowledge_area.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesStatus && matchesUser && matchesNature && matchesCategory && matchesSearch;
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, userFilter, natureFilter, categoryFilter, searchTerm, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPublications.length / pageSize));
+  const paginatedPublications = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredPublications.slice(startIndex, startIndex + pageSize);
+  }, [filteredPublications, currentPage, pageSize]);
 
   const total = visiblePublications.length;
   const pending = visiblePublications.filter(p => p.status === 'pending').length;
@@ -162,7 +238,10 @@ export default function AdminDashboard({
               {myAssignments.map((assignment, idx) => {
                 const studentEmail = assignment.assigned_user_email || '';
                 const studentName = assignment.assigned_user_name || studentEmail;
-                const studentPubs = publications.filter(p => p.user_email === studentEmail || p.user_name === studentName);
+                const studentPubs = publications.filter(p => 
+                  (p.user_email && p.user_email.trim().toLowerCase() === studentEmail.trim().toLowerCase()) || 
+                  (p.user_name && p.user_name.trim().toLowerCase() === studentName.trim().toLowerCase())
+                );
                 const pendingPubs = studentPubs.filter(p => p.status === 'pending').length;
                 
                 return (
@@ -231,6 +310,36 @@ export default function AdminDashboard({
               </select>
             </div>
 
+            {/* Filter by Natureza */}
+            <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200">
+              <Bookmark className="w-3.5 h-3.5 text-slate-400" />
+              <select 
+                className="text-xs font-bold text-slate-600 uppercase tracking-widest outline-none bg-transparent max-w-[170px]"
+                value={natureFilter}
+                onChange={(e) => setNatureFilter(e.target.value)}
+              >
+                <option value="all">Todas as Naturezas</option>
+                {availableNatures.map(n => (
+                  <option key={n} value={n}>{n.length > 35 ? n.substring(0, 33) + '...' : n}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filter by Categoria */}
+            <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200">
+              <Tag className="w-3.5 h-3.5 text-slate-400" />
+              <select 
+                className="text-xs font-bold text-slate-600 uppercase tracking-widest outline-none bg-transparent max-w-[170px]"
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+              >
+                <option value="all">Todas as Categorias</option>
+                {availableCategories.map(c => (
+                  <option key={c} value={c}>{c.length > 35 ? c.substring(0, 33) + '...' : c}</option>
+                ))}
+              </select>
+            </div>
+
             {isSuperAdmin && (
               <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200">
                 <User className="w-3.5 h-3.5 text-slate-400" />
@@ -240,12 +349,35 @@ export default function AdminDashboard({
                   onChange={(e) => setUserFilter(e.target.value)}
                 >
                   <option value="all">Todos os Usuários</option>
+                  <option value="mine">Meus Orientandos ({myStudentEmails.length})</option>
                   {uniqueUsers.map(user => (
                     <option key={user.email} value={user.email}>{user.name}</option>
                   ))}
                 </select>
               </div>
             )}
+
+            <div className="ml-auto flex items-center gap-3 text-xs text-slate-500 font-medium">
+              <span>
+                {filteredPublications.length > 0 ? (
+                  <>
+                    Mostrando <strong className="text-slate-800">{(currentPage - 1) * pageSize + 1}</strong> a <strong className="text-slate-800">{Math.min(currentPage * pageSize, filteredPublications.length)}</strong> de <strong className="text-slate-800">{filteredPublications.length}</strong>
+                  </>
+                ) : (
+                  <>0 registros</>
+                )}
+              </span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 outline-none hover:border-slate-300"
+              >
+                <option value={25}>25 / pág</option>
+                <option value={50}>50 / pág</option>
+                <option value={100}>100 / pág</option>
+                <option value={filteredPublications.length}>Todos ({filteredPublications.length})</option>
+              </select>
+            </div>
           </div>
         </div>
         
@@ -261,7 +393,7 @@ export default function AdminDashboard({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredPublications.map((pub) => (
+              {paginatedPublications.map((pub) => (
                 <tr key={pub.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-8 py-6 max-w-md">
                     <button 
@@ -364,6 +496,62 @@ export default function AdminDashboard({
           </table>
         </div>
         
+        {/* Pagination Navigation */}
+        {filteredPublications.length > pageSize && (
+          <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+            <span className="text-xs text-slate-500 font-medium">
+              Página <strong className="text-slate-800">{currentPage}</strong> de <strong className="text-slate-800">{totalPages}</strong> ({filteredPublications.length} registros)
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                Anterior
+              </button>
+
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum = currentPage;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
+                      currentPage === pageNum
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:bg-white'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+              >
+                Próxima
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {filteredPublications.length === 0 && (
           <div className="p-20 text-center">
             <p className="text-slate-400 font-medium italic">Nenhum registro encontrado com os filtros aplicados.</p>

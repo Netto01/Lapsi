@@ -4,7 +4,13 @@ export type NaturezaPublicacao =
   | 'TCR' 
   | 'TCC de especialização' 
   | 'Dissertação' 
-  | 'Tese';
+  | 'Tese'
+  | 'Monografia'
+  | 'Relatório de estágio'
+  | 'Livro'
+  | 'Livro (e-book)'
+  | 'Anais de evento'
+  | (string & {});
 
 export type CriterioInclusao = 
   | 'Pela leitura do título' 

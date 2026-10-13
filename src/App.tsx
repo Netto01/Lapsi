@@ -63,11 +63,11 @@ export default function App() {
     }
   }, [session]);
 
-  const isAdmin = session?.user?.email ? ADMIN_EMAILS.includes(session.user.email) : false;
-  const isSuperAdmin = session?.user?.email ? SUPER_ADMIN_EMAILS.includes(session.user.email) : false;
-  const currentUserProfile = profiles.find(p => p.email === session?.user?.email);
+  const isAdmin = session?.user?.email ? ADMIN_EMAILS.map(e => e.toLowerCase()).includes(session.user.email.toLowerCase()) : false;
+  const isSuperAdmin = session?.user?.email ? SUPER_ADMIN_EMAILS.map(e => e.toLowerCase()).includes(session.user.email.toLowerCase()) : false;
+  const currentUserProfile = profiles.find(p => p.email?.trim().toLowerCase() === session?.user?.email?.trim().toLowerCase());
 
-  const userPublications = publications.filter(p => p.user_email === session?.user?.email);
+  const userPublications = publications.filter(p => p.user_email?.trim().toLowerCase() === session?.user?.email?.trim().toLowerCase());
 
   useEffect(() => {
     if (isAdmin) {
@@ -137,7 +137,45 @@ export default function App() {
         .from('admin_assignments')
         .select('*');
       if (error) throw error;
-      setAssignments(data || []);
+      
+      // Correção: Os trabalhos cadastrados pela Beatriz Borges da Silva pertencem à orientação de Isaura de Bortoli Rossatto
+      const corrected = (data || []).map(a => {
+        const studentEmail = a.assigned_user_email?.trim().toLowerCase();
+        const studentName = a.assigned_user_name?.toLowerCase();
+        if (
+          studentEmail === 'biaborges2023@rede.ulbra.br' ||
+          (studentName && studentName.includes('beatriz borges'))
+        ) {
+          return {
+            ...a,
+            admin_email: 'isaura.rossatto@ulbra.br',
+            admin_name: 'Isaura de Bortoli Rossatto'
+          };
+        }
+        return a;
+      });
+
+      // Tentar atualizar no Supabase se houver permissão ativa de admin
+      const beatrizWithArlindo = (data || []).find(a => 
+        (a.assigned_user_email?.trim().toLowerCase() === 'biaborges2023@rede.ulbra.br' || a.assigned_user_name?.toLowerCase().includes('beatriz borges')) &&
+        (a.admin_email?.includes('netoarlindo') || a.admin_name?.includes('Arlindo'))
+      );
+      if (beatrizWithArlindo) {
+        supabase
+          .from('admin_assignments')
+          .update({
+            admin_email: 'isaura.rossatto@ulbra.br',
+            admin_name: 'Isaura de Bortoli Rossatto'
+          })
+          .eq('id', beatrizWithArlindo.id)
+          .then(({ error: syncErr }) => {
+            if (syncErr) {
+              console.warn('Syncing Beatriz assignment in Supabase:', syncErr.message);
+            }
+          });
+      }
+
+      setAssignments(corrected);
     } catch (error) {
       console.error('Error fetching assignments:', error);
     }
@@ -146,13 +184,69 @@ export default function App() {
   async function fetchPublications() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const PAGE_SIZE = 1000;
+      
+      // Obter contagem total exata para carregar todos os registros além do limite de 1000 do Supabase
+      const { count, error: countError } = await supabase
         .from('publications')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact', head: true });
 
-      if (error) throw error;
-      setPublications(data || []);
+      if (countError || count === null || count === undefined) {
+        // Fallback de busca em lote caso a contagem exata não retorne
+        let allPublications: Publication[] = [];
+        let from = 0;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('publications')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .range(from, from + PAGE_SIZE - 1);
+
+          if (error) throw error;
+          if (data && data.length > 0) {
+            allPublications = allPublications.concat(data as Publication[]);
+            from += PAGE_SIZE;
+            if (data.length < PAGE_SIZE) hasMore = false;
+          } else {
+            hasMore = false;
+          }
+        }
+        setPublications(allPublications);
+        return;
+      }
+
+      if (count === 0) {
+        setPublications([]);
+        return;
+      }
+
+      const numPages = Math.ceil(count / PAGE_SIZE);
+      const promises = [];
+
+      for (let i = 0; i < numPages; i++) {
+        const from = i * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+        promises.push(
+          supabase
+            .from('publications')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .range(from, to)
+        );
+      }
+
+      const results = await Promise.all(promises);
+      let allPublications: Publication[] = [];
+      for (const res of results) {
+        if (res.error) throw res.error;
+        if (res.data) {
+          allPublications = allPublications.concat(res.data as Publication[]);
+        }
+      }
+
+      setPublications(allPublications);
     } catch (error) {
       console.error('Error fetching publications:', error);
     } finally {

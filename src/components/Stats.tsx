@@ -1,5 +1,5 @@
 import { Publication } from '../types';
-import { FileText, CheckCircle2, XCircle, BookOpen } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, Layers } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface StatsProps {
@@ -10,13 +10,13 @@ export default function Stats({ publications }: StatsProps) {
   const total = publications.length;
   const included = publications.filter(p => p.inclusion_criterion !== 'Não incluso').length;
   const excluded = total - included;
-  const articles = publications.filter(p => p.nature === 'Artigo').length;
+  const distinctNatures = new Set(publications.map(p => p.nature).filter(Boolean)).size;
 
   const stats = [
     { label: 'Total', value: total, icon: FileText, color: 'text-brand-600', bg: 'bg-brand-50' },
     { label: 'Inclusos', value: included, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'Exclusos', value: excluded, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Artigos', value: articles, icon: BookOpen, color: 'text-brand-600', bg: 'bg-brand-50' },
+    { label: 'Naturezas', value: distinctNatures, icon: Layers, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
   return (

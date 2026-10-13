@@ -45,27 +45,56 @@ export default function ResourcesView({
   const professors = profiles.filter(p => p.role === 'professor');
 
   const getAdminForStudent = (email: string) => {
-    return assignments.find(a => a.assigned_user_email === email || a.assigned_user_name === email)?.admin_email;
+    return assignments.find(a => 
+      a.assigned_user_email?.toLowerCase() === email?.toLowerCase() || 
+      a.assigned_user_name?.toLowerCase() === email?.toLowerCase()
+    )?.admin_email;
   };
 
   const myAdminEmail = getAdminForStudent(currentAdminEmail);
 
-  const myStudents = assignments
-    .filter(a => a.admin_email === currentAdminEmail || a.admin_name === currentAdminName)
-    .map(a => a.assigned_user_email || a.assigned_user_name || '');
+  const myAssignments = assignments.filter(a => {
+    const adminEmail = a.admin_email?.trim().toLowerCase();
+    const adminName = a.admin_name?.trim().toLowerCase();
+    const currentEmail = currentAdminEmail?.trim().toLowerCase();
+    const currentName = currentAdminName?.trim().toLowerCase();
+    return (
+      (adminEmail && adminEmail === currentEmail) ||
+      (adminName && adminName === currentName)
+    );
+  });
+
+  const myStudentEmails = myAssignments
+    .map(a => a.assigned_user_email?.trim().toLowerCase())
+    .filter(Boolean) as string[];
+
+  const myStudentNames = myAssignments
+    .map(a => a.assigned_user_name?.trim().toLowerCase())
+    .filter(Boolean) as string[];
+
+  const myStudents = myStudentEmails;
 
   // Filter resources: Super Admin and Admins see everything.
   const visibleResources = (isSuperAdmin || isAdmin) 
     ? resources 
-    : resources.filter(res => 
-        res.created_by_email === currentAdminEmail ||
-        resourceAccess.some(acc => 
-          acc.resource_id === res.id && (
-            (acc.user_email && (acc.user_email === currentAdminEmail || myStudents.includes(acc.user_email))) ||
-            (acc.user_name && (acc.user_name === currentAdminName || myStudents.includes(acc.user_name)))
-          )
-        )
-      );
+    : resources.filter(res => {
+        const createdBy = res.created_by_email?.trim().toLowerCase();
+        const currentEmail = currentAdminEmail?.trim().toLowerCase();
+        if (createdBy && createdBy === currentEmail) return true;
+        
+        return resourceAccess.some(acc => {
+          if (acc.resource_id !== res.id) return false;
+          
+          const accEmail = acc.user_email?.trim().toLowerCase();
+          const accName = acc.user_name?.trim().toLowerCase();
+          const currentName = currentAdminName?.trim().toLowerCase();
+          
+          return (
+            (accEmail && (accEmail === currentEmail || myStudentEmails.includes(accEmail))) ||
+            (accName && (accName === currentName || myStudentNames.includes(accName)))
+          );
+        });
+      });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -11,7 +11,7 @@ interface PublicationFormProps {
 }
 
 const NATURE_OPTIONS: NaturezaPublicacao[] = [
-  'Artigo', 'TCC', 'TCR', 'TCC de especialização', 'Dissertação', 'Tese'
+  'Artigo', 'TCC', 'TCR', 'TCC de especialização', 'Dissertação', 'Tese', 'Monografia', 'Relatório de estágio', 'Livro (e-book)', 'Anais de evento'
 ];
 
 const CRITERION_OPTIONS: CriterioInclusao[] = [
